@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ user.get_full_name|default:user.username }} - Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" alt="Avatar" class="rounded-circle mb-3" width="150" height="150" style="object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                            <i class="bi bi-person-fill display-3 text-muted"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <h3>{{ user.get_full_name|default:user.username }}</h3>
+                    <p class="text-muted mb-2">@{{ user.username }}</p>
+                    
+                    <div class="mb-3">
+                        <span class="badge bg-primary">{{ user.get_cooking_skill_level_display }}</span>
+                    </div>
+                    
+                    {% if user.bio %}
+                        <p class="text-muted">{{ user.bio }}</p>
+                    {% endif %}
+                    
+                    {% if user.location %}
+                        <p class="text-muted">
+                            <i class="bi bi-geo-alt me-1"></i>{{ user.location }}
+                        </p>
+                    {% endif %}
+                    
+                    {% if user.dietary_preferences %}
+                        <p class="text-muted">
+                            <i class="bi bi-heart me-1"></i>{{ user.dietary_preferences }}
+                        </p>
+                    {% endif %}
+                    
+                    <p class="text-muted small">
+                        <i class="bi bi-calendar me-1"></i>Joined {{ user.date_joined|date:"F Y" }}
+                    </p>
+                    
+                    <a href="{% url 'users:profile' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-1"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <!-- Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <i class="bi bi-book display-4 text-primary mb-2"></i>
+                            <h4 class="mb-0">{{ total_recipes }}</h4>
+                            <small class="text-muted">Recipes</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <i class="bi bi-globe display-4 text-success mb-2"></i>
+                            <h4 class="mb-0">{{ public_recipes }}</h4>
+                            <small class="text-muted">Public</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <i class="bi bi-calendar-week display-4 text-info mb-2"></i>
+                            <h4 class="mb-0">{{ total_meal_plans }}</h4>
+                            <small class="text-muted">Meal Plans</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <i class="bi bi-cart display-4 text-warning mb-2"></i>
+                            <h4 class="mb-0">{{ active_shopping_lists }}</h4>
+                            <small class="text-muted">Active Lists</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Recipes -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Recipes</h5>
+                    <a href="{% url 'recipes:my_recipes' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_recipes %}
+                        <div class="row">
+                            {% for recipe in recent_recipes %}
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex">
+                                    {% if recipe.image %}
+                                        <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                            <i class="bi bi-image text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">
+                                            <a href="{{ recipe.get_absolute_url }}" class="text-decoration-none">{{ recipe.title }}</a>
+                                        </h6>
+                                        <small class="text-muted">{{ recipe.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-book display-4 text-muted mb-3"></i>
+                            <p class="text-muted">No recipes yet. <a href="{% url 'recipes:create' %}">Create your first recipe</a>!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

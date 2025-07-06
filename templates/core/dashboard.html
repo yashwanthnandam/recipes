@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Recipe Manager{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="bg-primary text-white rounded p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="mb-2">Welcome back, {{ user.first_name|default:user.username }}!</h1>
+                        <p class="mb-0 opacity-75">Here's what's happening in your kitchen today.</p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <div class="btn-group">
+                            <a href="{% url 'recipes:create' %}" class="btn btn-light">
+                                <i class="bi bi-plus-circle me-1"></i>Add Recipe
+                            </a>
+                            <a href="{% url 'meal_planning:calendar' %}" class="btn btn-outline-light">
+                                <i class="bi bi-calendar me-1"></i>Plan Meals
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-book display-4 text-primary mb-2"></i>
+                    <h3 class="mb-1">{{ stats.total_recipes }}</h3>
+                    <p class="text-muted mb-0">My Recipes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-calendar-week display-4 text-success mb-2"></i>
+                    <h3 class="mb-1">{{ stats.this_week_meals }}</h3>
+                    <p class="text-muted mb-0">This Week's Meals</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-cart display-4 text-warning mb-2"></i>
+                    <h3 class="mb-1">{{ stats.active_lists }}</h3>
+                    <p class="text-muted mb-0">Shopping Lists</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-check-circle display-4 text-info mb-2"></i>
+                    <h3 class="mb-1">{{ stats.completed_meals }}</h3>
+                    <p class="text-muted mb-0">Completed Meals</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Recipes -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-book me-2"></i>Recent Recipes
+                    </h5>
+                    <a href="{% url 'recipes:my_recipes' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if user_recipes %}
+                        {% for recipe in user_recipes %}
+                        <div class="d-flex align-items-center mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                            {% if recipe.image %}
+                            <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}" 
+                                 class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" 
+                                 style="width: 60px; height: 60px;">
+                                <i class="bi bi-image text-muted"></i>
+                            </div>
+                            {% endif %}
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    <a href="{{ recipe.get_absolute_url }}" class="text-decoration-none">
+                                        {{ recipe.title }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-clock me-1"></i>{{ recipe.total_time }} min
+                                    <span class="ms-2">
+                                        <i class="bi bi-star-fill text-warning me-1"></i>{{ recipe.average_rating|floatformat:1|default:"--" }}
+                                    </span>
+                                </small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-book display-4 text-muted mb-3"></i>
+                            <p class="text-muted">No recipes yet. <a href="{% url 'recipes:create' %}">Create your first recipe</a>!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- This Week's Meals -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-week me-2"></i>This Week's Meals
+                    </h5>
+                    <a href="{% url 'meal_planning:calendar' %}" class="btn btn-sm btn-outline-primary">View Calendar</a>
+                </div>
+                <div class="card-body">
+                    {% if this_week_meals %}
+                        {% for meal in this_week_meals %}
+                        <div class="d-flex align-items-center mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                            <div class="me-3">
+                                <div class="badge bg-primary">{{ meal.date|date:"M d" }}</div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ meal.recipe.title }}</h6>
+                                <small class="text-muted">
+                                    {{ meal.get_meal_type_display }} • {{ meal.servings }} serving{{ meal.servings|pluralize }}
+                                </small>
+                            </div>
+                            {% if meal.completed %}
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-calendar-week display-4 text-muted mb-3"></i>
+                            <p class="text-muted">No meals planned. <a href="{% url 'meal_planning:calendar' %}">Start planning</a>!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shopping Lists -->
+    {% if active_shopping_lists %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-cart me-2"></i>Active Shopping Lists
+                    </h5>
+                    <a href="{% url 'shopping:lists' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for shopping_list in active_shopping_lists %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="border rounded p-3">
+                                <h6 class="mb-2">
+                                    <a href="{{ shopping_list.get_absolute_url }}" class="text-decoration-none">
+                                        {{ shopping_list.name }}
+                                    </a>
+                                </h6>
+                                <div class="progress mb-2" style="height: 6px;">
+                                    <div class="progress-bar" style="width: {{ shopping_list.completion_percentage }}%"></div>
+                                </div>
+                                <small class="text-muted">
+                                    {{ shopping_list.completed_items }}/{{ shopping_list.total_items }} items
+                                    {% if shopping_list.due_date %}
+                                        • Due {{ shopping_list.due_date|date:"M d" }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

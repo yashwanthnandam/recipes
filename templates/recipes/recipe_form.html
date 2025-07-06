@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Recipe{% else %}Create New Recipe{% endif %} - Recipe Manager
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        {% if form.instance.pk %}Edit Recipe{% else %}Create New Recipe{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <h6>Please correct the following errors:</h6>
+                            <ul class="mb-0">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li><strong>{{ field|title }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information -->
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">Recipe Title *</label>
+                                {{ form.title }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.category.id_for_label }}" class="form-label fw-bold">Category</label>
+                                {{ form.category }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">Description *</label>
+                            {{ form.description }}
+                            <div class="form-text">Briefly describe your recipe</div>
+                        </div>
+
+                        <!-- Recipe Image -->
+                        <div class="mb-3">
+                            <label for="{{ form.image.id_for_label }}" class="form-label fw-bold">Recipe Image</label>
+                            {{ form.image }}
+                            {% if form.instance.image %}
+                                <div class="mt-2">
+                                    <img src="{{ form.instance.image.url }}" alt="Current image" class="img-thumbnail" style="max-width: 200px;">
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Timing and Servings -->
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.prep_time.id_for_label }}" class="form-label fw-bold">Prep Time (min) *</label>
+                                {{ form.prep_time }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.cook_time.id_for_label }}" class="form-label fw-bold">Cook Time (min) *</label>
+                                {{ form.cook_time }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.servings.id_for_label }}" class="form-label fw-bold">Servings *</label>
+                                {{ form.servings }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.difficulty.id_for_label }}" class="form-label fw-bold">Difficulty</label>
+                                {{ form.difficulty }}
+                            </div>
+                        </div>
+
+                        <!-- Instructions -->
+                        <div class="mb-4">
+                            <label for="{{ form.instructions.id_for_label }}" class="form-label fw-bold">Instructions *</label>
+                            {{ form.instructions }}
+                            <div class="form-text">Step-by-step cooking instructions. You can use line breaks for steps.</div>
+                        </div>
+
+                        <!-- Visibility -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.is_public }}
+                                <label for="{{ form.is_public.id_for_label }}" class="form-check-label">
+                                    Make this recipe public (visible to other users)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'recipes:list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Cancel
+                            </a>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    {% if form.instance.pk %}Update Recipe{% else %}Create Recipe{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

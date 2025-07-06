@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+    networks:
+      - recipes_network
+    x-tinkr:
+      cpu: 512
+      memory: 512
+      network:
+        public: true
+      ports:
+        web-8000:
+          port: 8000
+          protocol: http
+          public: true
+          healthcheck:
+            timeout: 10
+            interval: 30
+            path: /
+            retries: 3
+            success_code: 200-399
+
+volumes:
+  media_volume:
+
+networks:
+  recipes_network:
+    driver: bridge

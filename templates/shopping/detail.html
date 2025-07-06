@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ shopping_list.name }} - Shopping List{% endblock %}
+
+{% block extra_css %}
+<style>
+.shopping-list-header {
+    background: linear-gradient(135deg, var(--primary-color), #0b5ed7);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0.5rem;
+}
+
+.progress-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: conic-gradient(#28a745 calc(var(--progress) * 1%), #e9ecef 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.progress-circle::before {
+    content: '';
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+}
+
+.progress-text {
+    position: relative;
+    z-index: 1;
+    font-weight: bold;
+    color: var(--dark-color);
+}
+
+.category-section {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.category-header {
+    background: var(--light-color);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.category-header h5 {
+    margin: 0;
+    color: var(--dark-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.shopping-item {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f8f9fa;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: var(--transition);
+}
+
+.shopping-item:last-child {
+    border-bottom: none;
+}
+
+.shopping-item:hover {
+    background: #f8f9fa;
+}
+
+.shopping-item.completed {
+    opacity: 0.6;
+    background: #f8f9fa;
+}
+
+.shopping-item.completed .item-name {
+    text-decoration: line-through;
+}
+
+.item-checkbox {
+    width: 1.2rem;
+    height: 1.2rem;
+    cursor: pointer;
+}
+
+.item-details {
+    flex-grow: 1;
+}
+
+.item-name {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.item-meta {
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+}
+
+.item-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.quick-add-form {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.shopping-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="shopping-list-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-2">{{ shopping_list.name }}</h1>
+                    {% if shopping_list.description %}
+                    <p class="mb-0 opacity-75">{{ shopping_list.description }}</p>
+                    {% endif %}
+                    <div class="mt-2">
+                        <span class="badge bg-light text-dark me-2">
+                            <i class="bi bi-calendar me-1"></i>{{ shopping_list.created_at|date:"M d, Y" }}
+                        </span>
+                        {% if shopping_list.due_date %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-clock me-1"></i>Due {{ shopping_list.due_date|date:"M d" }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="progress-circle" style="--progress: {{ shopping_list.completion_percentage }}">
+                        <span class="progress-text">{{ shopping_list.completion_percentage }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="shopping-stats">
+        <div class="stat-card">
+            <div class="stat-value">{{ shopping_list.total_items }}</div>
+            <div class="stat-label">Total Items</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ shopping_list.completed_items }}</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${{ shopping_list.estimated_total_cost|floatformat:2|default:"0.00" }}</div>
+            <div class="stat-label">Estimated Cost</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">
+                <span class="badge bg-{{ shopping_list.get_priority_display|lower }}">
+                    {{ shopping_list.get_priority_display }}
+                </span>
+            </div>
+            <div class="stat-label">Priority</div>
+        </div>
+    </div>
+
+    <!-- Quick Add Form -->
+    <div class="quick-add-form">
+        <h5 class="mb-3">
+            <i class="bi bi-plus-circle me-2"></i>Add Item
+        </h5>
+        <form id="quickAddForm">
+            {% csrf_token %}
+            <div class="row align-items-end">
+                <div class="col-md-4">
+                    <label for="item-name" class="form-label">Item</label>
+                    <input type="text" class="form-control" id="item-name" name="name" required>
+                </div>
+                <div class="col-md-2">
+                    <label for="item-quantity" class="form-label">Quantity</label>
+                    <input type="number" class="form-control" id="item-quantity" name="quantity" value="1" step="0.1" min="0.1">
+                </div>
+                <div class="col-md-2">
+                    <label for="item-unit" class="form-label">Unit</label>
+                    <select class="form-select" id="item-unit" name="unit">
+                        <option value="piece">Piece</option>
+                        <option value="kg">Kilogram</option>
+                        <option value="g">Gram</option>
+                        <option value="l">Liter</option>
+                        <option value="ml">Milliliter</option>
+                        <option value="cup">Cup</option>
+                        <option value="package">Package</option>
+                    </select>
+                </div>
+                <!-- In the quick add form section of templates/shopping/detail.html -->
+                <div class="col-md-2">
+                    <label for="item-cost" class="form-label">Est. Cost</label>
+                    <input type="number" class="form-control" id="item-cost" name="estimated_cost" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="col-md-2">
+                    <label for="item-category" class="form-label">Category</label>
+                    <select class="form-select" id="item-category" name="category">
+                        <option value="">No Category</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-plus"></i> Add
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Shopping Items by Category -->
+    {% for category, items in categorized_items.items %}
+    <div class="category-section">
+        <div class="category-header">
+            <h5>
+                {% if category.icon %}
+                <i class="bi bi-{{ category.icon }}"></i>
+                {% endif %}
+                {{ category.name }}
+            </h5>
+            <span class="badge bg-secondary">{{ items.count }} items</span>
+        </div>
+        {% for item in items %}
+        <div class="shopping-item {% if item.completed %}completed{% endif %}" data-item-id="{{ item.id }}">
+            <input type="checkbox" class="item-checkbox" {% if item.completed %}checked{% endif %} 
+                   onchange="toggleItem({{ item.id }})">
+            <div class="item-details">
+                <div class="item-name">{{ item.name }}</div>
+                <div class="item-meta">
+                    {{ item.quantity }} {{ item.unit }}
+                    {% if item.notes %}
+                    <span class="text-muted"> • {{ item.notes }}</span>
+                    {% endif %}
+                    {% if item.from_recipe %}
+                    <span class="text-muted"> • From {{ item.from_recipe.title }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="item-actions">
+                {% if item.estimated_cost %}
+                <span class="badge bg-light text-dark">${{ item.estimated_cost }}</span>
+                {% endif %}
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteItem({{ item.id }})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    <!-- Uncategorized Items -->
+    {% if uncategorized_items %}
+    <div class="category-section">
+        <div class="category-header">
+            <h5>
+                <i class="bi bi-question-circle"></i>
+                Uncategorized
+            </h5>
+            <span class="badge bg-secondary">{{ uncategorized_items.count }} items</span>
+        </div>
+        {% for item in uncategorized_items %}
+        <div class="shopping-item {% if item.completed %}completed{% endif %}" data-item-id="{{ item.id }}">
+            <input type="checkbox" class="item-checkbox" {% if item.completed %}checked{% endif %} 
+                   onchange="toggleItem({{ item.id }})">
+            <div class="item-details">
+                <div class="item-name">{{ item.name }}</div>
+                <div class="item-meta">
+                    {{ item.quantity }} {{ item.unit }}
+                    {% if item.notes %}
+                    <span class="text-muted"> • {{ item.notes }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="item-actions">
+                {% if item.estimated_cost %}
+                <span class="badge bg-light text-dark">${{ item.estimated_cost }}</span>
+                {% endif %}
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteItem({{ item.id }})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <a href="{% url 'shopping:lists' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back to Lists
+            </a>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <button class="btn btn-outline-primary me-2" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i>Print List
+            </button>
+            <a href="{% url 'shopping:update' shopping_list.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i>Edit List
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('quickAddForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('{% url "shopping:add_item" shopping_list.pk %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error adding item: ' + JSON.stringify(data.errors));
+        }
+    });
+});
+
+function toggleItem(itemId) {
+    fetch(`{% url 'shopping:toggle_item' 0 %}`.replace('0', itemId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update UI without full reload
+            const item = document.querySelector(`[data-item-id="${itemId}"]`);
+            if (data.completed) {
+                item.classList.add('completed');
+            } else {
+                item.classList.remove('completed');
+            }
+            
+            // Update progress circle
+            const progressCircle = document.querySelector('.progress-circle');
+            progressCircle.style.setProperty('--progress', data.completion_percentage);
+            progressCircle.querySelector('.progress-text').textContent = data.completion_percentage + '%';
+        }
+    });
+}
+
+function deleteItem(itemId) {
+    if (confirm('Delete this item?')) {
+        fetch(`{% url 'shopping:delete_item' 0 %}`.replace('0', itemId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

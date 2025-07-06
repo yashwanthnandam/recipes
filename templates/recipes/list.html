@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Recipes - Recipe Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold">All Recipes</h2>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'recipes:create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Add Recipe
+                    </a>
+                {% endif %}
+            </div>
+
+            <!-- Search and Filter Section -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <form method="GET" class="d-flex">
+                        <input type="text" name="search" class="form-control me-2" 
+                               placeholder="Search recipes..." value="{{ search_query }}">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-4">
+                    <form method="GET">
+                        {% if search_query %}
+                            <input type="hidden" name="search" value="{{ search_query }}">
+                        {% endif %}
+                        <select name="category" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" {% if category.id|stringformat:"s" == selected_category %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results Count -->
+            {% if search_query or selected_category %}
+                <div class="mb-3">
+                    <small class="text-muted">
+                        {% if search_query %}
+                            Showing results for "{{ search_query }}"
+                        {% endif %}
+                        {% if selected_category %}
+                            (filtered by category)
+                        {% endif %}
+                        - {{ recipes|length }} recipe{{ recipes|length|pluralize }} found
+                    </small>
+                </div>
+            {% endif %}
+
+            <!-- Recipe Grid -->
+            {% if recipes %}
+                <div class="row g-4">
+                    {% for recipe in recipes %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm">
+                                {% if recipe.image %}
+                                    <img src="{{ recipe.image.url }}" class="card-img-top" 
+                                         alt="{{ recipe.title }}" style="height: 200px; object-fit: cover;">
+                                {% else %}
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                                         style="height: 200px;">
+                                        <i class="bi bi-image display-4 text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ recipe.title }}</h5>
+                                    <p class="card-text text-muted">{{ recipe.description|truncatechars:100 }}</p>
+                                    
+                                    <!-- Recipe Info -->
+                                    <div class="d-flex justify-content-between align-items-center small text-muted mb-2">
+                                        <span><i class="bi bi-clock me-1"></i>{{ recipe.total_time }} min</span>
+                                        <span><i class="bi bi-person me-1"></i>{{ recipe.servings }}</span>
+                                        <span class="badge badge-{{ recipe.difficulty }}">{{ recipe.get_difficulty_display }}</span>
+                                    </div>
+                                    
+                                    {% if recipe.category %}
+                                        <small class="text-muted">
+                                            <i class="bi bi-tag me-1"></i>{{ recipe.category.name }}
+                                        </small>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="card-footer bg-transparent">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <a href="{% url 'recipes:detail' recipe.pk %}" class="btn btn-primary btn-sm">
+                                            View Recipe
+                                        </a>
+                                        <small class="text-muted">
+                                            by {{ recipe.author.get_full_name|default:recipe.author.username }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <nav aria-label="Recipe pagination" class="mt-5">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Last</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+
+            {% else %}
+                <!-- Empty State -->
+                <div class="text-center py-5">
+                    <i class="bi bi-book display-1 text-muted"></i>
+                    <h4 class="mt-3">No recipes found</h4>
+                    {% if search_query or selected_category %}
+                        <p class="text-muted">Try adjusting your search or filter criteria.</p>
+                        <a href="{% url 'recipes:list' %}" class="btn btn-outline-primary">Show All Recipes</a>
+                    {% else %}
+                        <p class="text-muted">Be the first to add a recipe!</p>
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'recipes:create' %}" class="btn btn-primary">Add First Recipe</a>
+                        {% else %}
+                            <a href="{% url 'users:register' %}" class="btn btn-primary">Sign Up to Add Recipes</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
