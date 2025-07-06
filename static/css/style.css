@@ -1,0 +1,138 @@
+/* Custom styles for Recipe Manager */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.recipe-card .card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+.btn {
+    border-radius: 8px;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+}
+
+.alert {
+    border-radius: 8px;
+}
+
+/* Avatar styles */
+.avatar-sm {
+    width: 24px;
+    height: 24px;
+    object-fit: cover;
+}
+
+/* Recipe difficulty badges */
+.badge-easy {
+    background-color: #28a745;
+}
+
+.badge-medium {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.badge-hard {
+    background-color: #dc3545;
+}
+
+/* Loading states */
+.btn-loading {
+    position: relative;
+}
+
+.btn-loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid transparent;
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: button-loading-spinner 1s ease infinite;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+@keyframes button-loading-spinner {
+    from {
+        transform: rotate(0turn);
+    }
+    to {
+        transform: rotate(1turn);
+    }
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .card-columns {
+        column-count: 1;
+    }
+    
+    .navbar-nav .nav-link {
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* Form improvements */
+.form-floating > label {
+    padding: 1rem 0.75rem;
+}
+
+.is-invalid {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    display: block;
+}
+
+/* Recipe steps styling */
+.recipe-steps {
+    counter-reset: step-counter;
+}
+
+.recipe-step {
+    counter-increment: step-counter;
+    position: relative;
+    padding-left: 3rem;
+    margin-bottom: 1.5rem;
+}
+
+.recipe-step::before {
+    content: counter(step-counter);
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: #007bff;
+    color: white;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.875rem;
+}

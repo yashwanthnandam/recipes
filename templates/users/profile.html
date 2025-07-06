@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile Settings - Recipe Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" alt="Avatar" class="rounded-circle mb-3" width="120" height="120" style="object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                            <i class="bi bi-person-fill display-4 text-muted"></i>
+                        </div>
+                    {% endif %}
+                    <h5>{{ user.get_full_name|default:user.username }}</h5>
+                    <p class="text-muted">{{ user.get_cooking_skill_level_display }}</p>
+                </div>
+            </div>
+            
+            <div class="list-group mt-3">
+                <a href="{% url 'users:profile' %}" class="list-group-item list-group-item-action active">
+                    <i class="bi bi-person me-2"></i>Profile Settings
+                </a>
+                <a href="{% url 'users:password_change' %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-shield-lock me-2"></i>Change Password
+                </a>
+                <a href="{% url 'recipes:my_recipes' %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-book me-2"></i>My Recipes
+                </a>
+                <a href="{% url 'users:profile_detail' %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-graph-up me-2"></i>View Profile
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Profile Settings</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
+                                {{ form.first_name }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                                {{ form.last_name }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                            {{ form.email }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.avatar.id_for_label }}" class="form-label">Profile Picture</label>
+                            {{ form.avatar }}
+                            <div class="form-text">Choose a profile picture (optional)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.bio.id_for_label }}" class="form-label">Bio</label>
+                            {{ form.bio }}
+                            <div class="form-text">Tell others about yourself and your cooking journey</div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.location.id_for_label }}" class="form-label">Location</label>
+                                {{ form.location }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.birth_date.id_for_label }}" class="form-label">Birth Date</label>
+                                {{ form.birth_date }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.dietary_preferences.id_for_label }}" class="form-label">Dietary Preferences</label>
+                                {{ form.dietary_preferences }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.cooking_skill_level.id_for_label }}" class="form-label">Cooking Skill Level</label>
+                                {{ form.cooking_skill_level }}
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>Save Changes
+                        </button>
+                        <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

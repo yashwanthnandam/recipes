@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Recipe Manager{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    {% load static %}
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'core:home' %}">
+                <i class="bi bi-heart-fill me-2"></i>Recipe Manager
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:home' %}">
+                            <i class="bi bi-house me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'recipes:list' %}">
+                            <i class="bi bi-book me-1"></i>Recipes
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:dashboard' %}">
+                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'meal_planning:calendar' %}">
+                            <i class="bi bi-calendar-week me-1"></i>Meal Plans
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'shopping:lists' %}">
+                            <i class="bi bi-cart me-1"></i>Shopping
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <!-- Search Form - Fixed URL -->
+                <form class="d-flex me-3" method="GET" action="{% url 'recipes:list' %}">
+                    <input class="form-control me-2" type="search" name="search" placeholder="Search recipes..." 
+                           value="{{ request.GET.search }}">
+                    <button class="btn btn-outline-light" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+                
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                {% if user.avatar %}
+                                    <img src="{{ user.avatar.url }}" alt="Avatar" class="rounded-circle me-1" width="24" height="24">
+                                {% else %}
+                                    <i class="bi bi-person-circle me-1"></i>
+                                {% endif %}
+                                {{ user.first_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'users:profile' %}">
+                                    <i class="bi bi-person me-2"></i>Profile
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'recipes:my_recipes' %}">
+                                    <i class="bi bi-book me-2"></i>My Recipes
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'recipes:create' %}">
+                                    <i class="bi bi-plus-circle me-2"></i>Add Recipe
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'users:logout' %}">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:login' %}">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:register' %}">
+                                <i class="bi bi-person-plus me-1"></i>Register
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="fw-bold">Recipe Manager</h6>
+                    <p class="text-muted small">Organize your culinary journey</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted small mb-0">
+                        &copy; {% now "Y" %} Recipe Manager. Made with <i class="bi bi-heart-fill text-danger"></i>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

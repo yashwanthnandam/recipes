@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ recipe.title }} - Recipe Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Recipe Header -->
+            <div class="card shadow mb-4">
+                {% if recipe.image %}
+                    <img src="{{ recipe.image.url }}" class="card-img-top" alt="{{ recipe.title }}" style="height: 300px; object-fit: cover;">
+                {% endif %}
+                
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h1 class="card-title">{{ recipe.title }}</h1>
+                        {% if user == recipe.author %}
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'recipes:edit' recipe.pk %}">
+                                        <i class="bi bi-pencil me-2"></i>Edit
+                                    </a></li>
+                                    <li><a class="dropdown-item text-danger" href="{% url 'recipes:delete' recipe.pk %}">
+                                        <i class="bi bi-trash me-2"></i>Delete
+                                    </a></li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="text-muted">{{ recipe.description }}</p>
+                    
+                    <!-- Recipe Meta Info -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <i class="bi bi-clock display-6 text-primary"></i>
+                                <div class="mt-2">
+                                    <strong>{{ recipe.prep_time }}</strong>
+                                    <div class="small text-muted">Prep Time</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <i class="bi bi-fire display-6 text-danger"></i>
+                                <div class="mt-2">
+                                    <strong>{{ recipe.cook_time }}</strong>
+                                    <div class="small text-muted">Cook Time</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <i class="bi bi-people display-6 text-success"></i>
+                                <div class="mt-2">
+                                    <strong>{{ recipe.servings }}</strong>
+                                    <div class="small text-muted">Servings</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <i class="bi bi-bar-chart display-6 text-warning"></i>
+                                <div class="mt-2">
+                                    <strong>{{ recipe.get_difficulty_display }}</strong>
+                                    <div class="small text-muted">Difficulty</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="card shadow">
+                <div class="card-header">
+                    <h3 class="mb-0">Instructions</h3>
+                </div>
+                <div class="card-body">
+                    <div class="recipe-instructions">
+                        {{ recipe.instructions|linebreaks }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Recipe Info -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Recipe Info</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Author:</strong> {{ recipe.author.get_full_name|default:recipe.author.username }}</p>
+                    {% if recipe.category %}
+                        <p><strong>Category:</strong> {{ recipe.category.name }}</p>
+                    {% endif %}
+                    <p><strong>Created:</strong> {{ recipe.created_at|date:"M d, Y" }}</p>
+                    {% if recipe.updated_at != recipe.created_at %}
+                        <p><strong>Updated:</strong> {{ recipe.updated_at|date:"M d, Y" }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Back to List -->
+            <div class="d-grid">
+                <a href="{% url 'recipes:list' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Recipes
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

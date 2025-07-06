@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Recipe Manager - Organize Your Culinary Journey{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="jumbotron bg-primary text-white rounded-4 p-5 mb-5">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-3">Welcome to Recipe Manager</h1>
+                <p class="lead mb-4">Organize your recipes, plan your meals, and simplify your cooking journey. From kitchen novice to master chef, we've got you covered.</p>
+                {% if user.is_authenticated %}
+                    <a class="btn btn-light btn-lg me-3" href="{% url 'core:dashboard' %}">
+                        <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+                    </a>
+                    <a class="btn btn-outline-light btn-lg" href="{% url 'recipes:create' %}">
+                        <i class="bi bi-plus-circle me-2"></i>Add Recipe
+                    </a>
+                {% else %}
+                    <a class="btn btn-light btn-lg me-3" href="{% url 'users:register' %}">
+                        <i class="bi bi-person-plus me-2"></i>Get Started Free
+                    </a>
+                    <a class="btn btn-outline-light btn-lg" href="{% url 'users:login' %}">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                    </a>
+                {% endif %}
+            </div>
+            <div class="col-lg-4 text-center">
+                <div class="bg-white bg-opacity-10 rounded-circle p-5 d-inline-block">
+                    <i class="bi bi-heart-fill display-1"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="display-5 fw-bold">Everything You Need for Cooking Success</h2>
+            <p class="lead text-muted">Powerful tools to organize, plan, and share your culinary creations</p>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-block mb-3">
+                        <i class="bi bi-book display-4 text-primary"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Recipe Collection</h5>
+                    <p class="card-text text-muted">Store and organize all your favorite recipes in one place. Add photos, ingredients, and step-by-step instructions.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="bg-success bg-opacity-10 rounded-circle p-3 d-inline-block mb-3">
+                        <i class="bi bi-calendar-week display-4 text-success"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Meal Planning</h5>
+                    <p class="card-text text-muted">Plan your weekly meals with our intuitive calendar. Never wonder "what's for dinner?" again.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="bg-warning bg-opacity-10 rounded-circle p-3 d-inline-block mb-3">
+                        <i class="bi bi-cart display-4 text-warning"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Smart Shopping Lists</h5>
+                    <p class="card-text text-muted">Automatically generate shopping lists from your meal plans. Never forget an ingredient again.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Recipes Section -->
+    {% if featured_recipes %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold">Featured Recipes</h3>
+                <a href="{% url 'recipes:list' %}" class="btn btn-outline-primary">View All Recipes</a>
+            </div>
+            <div class="row g-4">
+                {% for recipe in featured_recipes %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        {% if recipe.image %}
+                            <img src="{{ recipe.image.url }}" class="card-img-top" alt="{{ recipe.title }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-image display-4 text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h6 class="card-title fw-bold">{{ recipe.title }}</h6>
+                            <p class="card-text text-muted small">{{ recipe.description|truncatechars:80 }}</p>
+                            <div class="d-flex justify-content-between align-items-center small text-muted">
+                                <span><i class="bi bi-clock me-1"></i>{{ recipe.total_time }} min</span>
+                                <span><i class="bi bi-person me-1"></i>{{ recipe.servings }}</span>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0">
+                            <a href="{{ recipe.get_absolute_url }}" class="btn btn-primary btn-sm">View Recipe</a>
+                            <small class="text-muted ms-2">by {{ recipe.author.get_full_name|default:recipe.author.username }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Categories Section -->
+    {% if categories %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="fw-bold mb-4">Browse by Category</h3>
+            <div class="row g-3">
+                {% for category in categories %}
+                <div class="col-md-3 col-sm-6">
+                    <a href="{% url 'recipes:list' %}?category={{ category.id }}" class="text-decoration-none">
+                        <div class="card border-0 shadow-sm h-100 category-card">
+                            <div class="card-body text-center p-4">
+                                {% if category.icon %}
+                                    <i class="bi bi-{{ category.icon }} display-5 mb-2" style="color: {{ category.color }};"></i>
+                                {% else %}
+                                    <div class="rounded-circle p-3 d-inline-block mb-2" style="background-color: {{ category.color }}20;">
+                                        <i class="bi bi-bookmark display-6" style="color: {{ category.color }};"></i>
+                                    </div>
+                                {% endif %}
+                                <h6 class="card-title fw-bold text-dark">{{ category.name }}</h6>
+                                <small class="text-muted">{{ category.recipe_count }} recipe{{ category.recipe_count|pluralize }}</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Stats Section -->
+    <div class="row text-center bg-light rounded-4 p-5 mb-5">
+        <div class="col-md-4 mb-3 mb-md-0">
+            <h3 class="fw-bold text-primary">{{ total_recipes|default:"1000+" }}</h3>
+            <p class="text-muted mb-0">Delicious Recipes</p>
+        </div>
+        <div class="col-md-4 mb-3 mb-md-0">
+            <h3 class="fw-bold text-success">Happy</h3>
+            <p class="text-muted mb-0">Home Cooks</p>
+        </div>
+        <div class="col-md-4">
+            <h3 class="fw-bold text-warning">24/7</h3>
+            <p class="text-muted mb-0">Kitchen Inspiration</p>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    {% if not user.is_authenticated %}
+    <div class="text-center mb-5">
+        <div class="bg-primary bg-opacity-10 rounded-4 p-5">
+            <h3 class="fw-bold mb-3">Ready to Start Cooking?</h3>
+            <p class="lead text-muted mb-4">Join thousands of home cooks organizing their kitchen life with Recipe Manager.</p>
+            <a href="{% url 'users:register' %}" class="btn btn-primary btn-lg">
+                <i class="bi bi-person-plus me-2"></i>Create Free Account
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.category-card {
+    transition: transform 0.2s ease-in-out;
+}
+.category-card:hover {
+    transform: translateY(-2px);
+}
+.jumbotron {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+</style>
+{% endblock %}

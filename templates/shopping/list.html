@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shopping Lists{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Shopping Lists</h2>
+            <p class="text-muted mb-0">Manage your shopping lists and grocery needs</p>
+        </div>
+        <div>
+            <a href="{% url 'shopping:create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>New List
+            </a>
+        </div>
+    </div>
+
+    <!-- Shopping Lists Grid -->
+    {% if shopping_lists %}
+    <div class="row">
+        {% for shopping_list in shopping_lists %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">{{ shopping_list.name|truncatechars:30 }}</h6>
+                    <span class="badge bg-{{ shopping_list.get_priority_display|lower }}">
+                        {{ shopping_list.get_priority_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    {% if shopping_list.description %}
+                    <p class="card-text text-muted small">{{ shopping_list.description|truncatechars:100 }}</p>
+                    {% endif %}
+                    
+                    <!-- Progress Bar -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Progress</small>
+                            <small class="text-muted">{{ shopping_list.completed_count }}/{{ shopping_list.item_count }}</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar" style="width: {{ shopping_list.completion_percentage }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="small text-muted">Items</div>
+                            <div class="fw-bold">{{ shopping_list.item_count }}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Cost</div>
+                            <div class="fw-bold">${{ shopping_list.estimated_total_cost|floatformat:0|default:"--" }}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Due</div>
+                            <div class="fw-bold">
+                                {% if shopping_list.due_date %}
+                                    {{ shopping_list.due_date|date:"M d" }}
+                                {% else %}
+                                    --
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            {% if shopping_list.auto_generated %}
+                                <i class="bi bi-robot me-1"></i>Auto-generated
+                            {% else %}
+                                <i class="bi bi-clock me-1"></i>{{ shopping_list.created_at|date:"M d" }}
+                            {% endif %}
+                        </small>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'shopping:detail' shopping_list.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'shopping:update' shopping_list.pk %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Shopping lists pagination">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5">
+        <i class="bi bi-cart display-1 text-muted"></i>
+        <h3 class="mt-3">No Shopping Lists Yet</h3>
+        <p class="text-muted">Create your first shopping list to get started.</p>
+        <a href="{% url 'shopping:create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>Create Shopping List
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
