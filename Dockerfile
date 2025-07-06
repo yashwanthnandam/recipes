@@ -21,23 +21,17 @@ RUN apt-get update \
 
 # Install Python dependencies
 COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir -r requirements.txt
 
 # Copy project
 COPY . /app/
 
-# Create staticfiles directory
-RUN mkdir -p /app/staticfiles
-
-# Create media directory
-RUN mkdir -p /app/media
+# Create directories and set permissions
+RUN mkdir -p /app/staticfiles /app/media && \
+    chmod +x /app/docker-entrypoint.sh
 
 # Collect static files
 RUN python manage.py collectstatic --noinput --clear
-
-# Create entrypoint script
-COPY docker-entrypoint.sh /app/
-RUN chmod +x /app/docker-entrypoint.sh
 
 # Expose port
 EXPOSE 8000
