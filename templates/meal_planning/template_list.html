@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Meal Plan Templates - Recipe Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold">Meal Plan Templates</h2>
+                <a href="{% url 'meal_planning:template_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Create Template
+                </a>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <form method="GET" class="d-flex">
+                        <input type="text" name="search" class="form-control me-2" 
+                               placeholder="Search templates..." value="{{ search_query }}">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <form method="GET" class="d-flex">
+                        <select name="category" class="form-select me-2" onchange="this.form.submit()">
+                            <option value="">All Templates</option>
+                            <option value="mine" {% if category_filter == 'mine' %}selected{% endif %}>My Templates</option>
+                            <option value="public" {% if category_filter == 'public' %}selected{% endif %}>Public Templates</option>
+                        </select>
+                        {% if search_query %}
+                            <input type="hidden" name="search" value="{{ search_query }}">
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results Info -->
+            <div class="mb-3">
+                <small class="text-muted">
+                    {% if search_query or category_filter %}
+                        Filtered results: {{ templates|length }} template{{ templates|length|pluralize }}
+                    {% else %}
+                        Showing {{ templates|length }} template{{ templates|length|pluralize }}
+                    {% endif %}
+                </small>
+            </div>
+
+            <!-- Templates Grid -->
+            {% if templates %}
+                <div class="row g-4">
+                    {% for template in templates %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="card-title">{{ template.name }}</h5>
+                                        <div class="d-flex gap-1">
+                                            {% if template.is_public %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-globe"></i>
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-lock"></i>
+                                                </span>
+                                            {% endif %}
+                                            {% if template.user == user %}
+                                                <span class="badge bg-primary">Mine</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="card-text text-muted">{{ template.description|truncatechars:100 }}</p>
+                                    
+                                    <!-- Template Stats -->
+                                    <div class="row small text-muted mb-3">
+                                        <div class="col-6">
+                                            <i class="bi bi-calendar-week me-1"></i>{{ template.meal_count }} meals
+                                        </div>
+                                        <div class="col-6">
+                                            <i class="bi bi-person me-1"></i>{{ template.user.username }}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="small text-muted">
+                                        <i class="bi bi-clock me-1"></i>{{ template.created_at|date:"M d, Y" }}
+                                    </div>
+                                </div>
+                                
+                                <div class="card-footer bg-transparent">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <a href="{% url 'meal_planning:template_detail' template.pk %}" 
+                                           class="btn btn-primary btn-sm">
+                                            View Details
+                                        </a>
+                                        
+                                        <div class="btn-group" role="group">
+                                            {% if template.user == user %}
+                                                <a href="{% url 'meal_planning:template_edit' template.pk %}" 
+                                                   class="btn btn-outline-secondary btn-sm">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a href="{% url 'meal_planning:template_delete' template.pk %}" 
+                                                   class="btn btn-outline-danger btn-sm">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            {% else %}
+                                                <button class="btn btn-outline-success btn-sm" 
+                                                        onclick="copyTemplate({{ template.pk }})">
+                                                    <i class="bi bi-files"></i>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <nav aria-label="Template pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <!-- Empty State -->
+                <div class="text-center py-5">
+                    <i class="bi bi-calendar-week display-1 text-muted"></i>
+                    <h4 class="mt-3">No templates found</h4>
+                    {% if search_query or category_filter %}
+                        <p class="text-muted">Try adjusting your search or filters.</p>
+                        <a href="{% url 'meal_planning:templates' %}" class="btn btn-outline-primary">Show All Templates</a>
+                    {% else %}
+                        <p class="text-muted">Create your first meal plan template to get started.</p>
+                        <a href="{% url 'meal_planning:template_create' %}" class="btn btn-primary">Create Template</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function copyTemplate(templateId) {
+    if (confirm('Copy this template to your own templates?')) {
+        fetch(`/meal-planning/templates/${templateId}/copy/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error copying template: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error copying template');
+        });
+    }
+}
+</script>
+{% endblock %}

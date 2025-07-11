@@ -59,7 +59,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             
             this_week_meals = MealPlan.objects.filter(
                 user=user,
-                date__range=[week_start, week_end]
+                date__range=[today, week_end]
             ).select_related('recipe').order_by('date', 'meal_type')[:10]
             
             # Active shopping lists

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Recipe, Category
+from .models import Recipe, Category, RecipeStep
 
 class RecipeForm(forms.ModelForm):
     class Meta:
@@ -64,3 +64,13 @@ class RecipeForm(forms.ModelForm):
         self.fields['prep_time'].help_text = "Time needed to prepare ingredients"
         self.fields['cook_time'].help_text = "Time needed to cook the recipe"
         self.fields['servings'].help_text = "Number of people this recipe serves"
+
+class RecipeStepForm(forms.ModelForm):
+    class Meta:
+        model = RecipeStep
+        fields = ['step_number', 'instruction', 'time_required']
+        widgets = {
+            'step_number': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'instruction': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'time_required': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+        }

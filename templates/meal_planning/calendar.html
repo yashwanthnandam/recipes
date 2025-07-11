@@ -1,190 +1,356 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Meal Planning Calendar{% endblock %}
+{% block title %}Meal Planning Calendar - Recipe Manager{% endblock %}
 
 {% block extra_css %}
 <style>
-.meal-calendar {
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    overflow: hidden;
-}
-
-.calendar-header {
-    background: var(--primary-color);
-    color: white;
-    padding: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 1px;
-    background: #dee2e6;
-}
-
-.calendar-day {
-    background: white;
-    padding: 1rem;
-    min-height: 200px;
-    position: relative;
-}
-
-.calendar-day.today {
-    background: #e3f2fd;
-}
-
-.day-header {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.meal-item {
-    background: var(--primary-color);
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    margin-bottom: 0.25rem;
-    cursor: pointer;
-    position: relative;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.meal-item:hover {
-    background: #0b5ed7;
-}
-
-.meal-item .remove-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 0.8rem;
-    padding: 0;
-    margin-left: 0.25rem;
-    opacity: 0.7;
-}
-
-.meal-item .remove-btn:hover {
-    opacity: 1;
-}
-
-.add-meal-btn {
-    background: #e9ecef;
-    border: 1px dashed #adb5bd;
-    color: #6c757d;
-    padding: 0.25rem;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    width: 100%;
-    margin-top: 0.25rem;
-    cursor: pointer;
-}
-
-.add-meal-btn:hover {
-    background: #dee2e6;
-}
-
-.meal-type-sections {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.meal-type-section h6 {
-    font-size: 0.8rem;
-    color: var(--secondary-color);
-    margin-bottom: 0.25rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.quick-actions {
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-}
+    .calendar-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .calendar-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .day-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        min-height: 300px;
+        transition: all 0.3s ease;
+    }
+    
+    .day-card.today {
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+    
+    .day-header {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .meal-section {
+        margin-bottom: 12px;
+    }
+    
+    .meal-type {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .meal-item {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 8px;
+        margin-bottom: 5px;
+        font-size: 0.85rem;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .meal-item:hover {
+        background: #e9ecef;
+        transform: translateY(-1px);
+    }
+    
+    .meal-item .remove-btn {
+        position: absolute;
+        top: 2px;
+        right: 5px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        font-size: 12px;
+        display: none;
+    }
+    
+    .meal-item:hover .remove-btn {
+        display: block;
+    }
+    
+    .add-meal-btn {
+        width: 100%;
+        border: 2px dashed #dee2e6;
+        background: transparent;
+        color: #6c757d;
+        border-radius: 6px;
+        padding: 8px;
+        font-size: 0.8rem;
+        transition: all 0.2s ease;
+    }
+    
+    .add-meal-btn:hover {
+        border-color: #007bff;
+        color: #007bff;
+        background: rgba(0, 123, 255, 0.05);
+    }
+    
+    .week-navigation {
+        margin-bottom: 20px;
+    }
+    
+    .quick-actions {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+    }
+    
+    .template-card {
+        border-radius: 8px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .template-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid">
     <div class="row">
-        <div class="col-12">
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h4 class="mb-0">Meal Planning</h4>
-                        <p class="text-muted mb-0">Plan your meals for the week</p>
+        <!-- Main Calendar -->
+        <div class="col-lg-9">
+            <div class="calendar-container">
+                <!-- Calendar Header -->
+                <div class="calendar-header">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 d-flex gap-2">
+                            <a href="?week={{ prev_week }}" class="btn btn-outline-light">
+                                <i class="bi bi-chevron-left"></i> Previous Week
+                            </a>
+                            <button class="btn btn-light" onclick="downloadCalendar()">
+                                <i class="bi bi-download"></i> Export Week
+                            </button>
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <h3 class="mb-0">
+                                {{ week_start|date:"M d" }} - {{ week_end|date:"M d, Y" }}
+                            </h3>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <a href="?week={{ next_week }}" class="btn btn-outline-light">
+                                Next Week <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </div>
                     </div>
-                    <div class="col-md-6 text-md-end">
-                        <button class="btn btn-success me-2" onclick="generateShoppingList()">
-                            <i class="bi bi-cart-plus me-1"></i>Generate Shopping List
-                        </button>
-                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#templateModal">
-                            <i class="bi bi-layout-text-window-reverse me-1"></i>Use Template
-                        </button>
+                    <!-- Export Week Button Only -->
+                    <div class="row mt-3">
+                        <div class="col-12 d-flex justify-content-end gap-2">
+                            <button class="btn btn-sm btn-light" onclick="downloadCalendar()">
+                                <i class="bi bi-download"></i> Export Week
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Week Navigation -->
+                <div class="week-navigation p-3 bg-light">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="btn-group" role="group">
+                                <a href="?week=0" class="btn btn-outline-primary btn-sm">This Week</a>
+                                <a href="?week=1" class="btn btn-outline-primary btn-sm">Next Week</a>
+                                <a href="?week=-1" class="btn btn-outline-primary btn-sm">Last Week</a>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button class="btn btn-success btn-sm" onclick="showQuickAddModal()">
+                                <i class="bi bi-plus-circle me-1"></i>Quick Add Meal
+                            </button>
+                            <form method="POST" action="{% url 'meal_planning:generate_shopping_list' %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="week_start" value="{{ week_start|date:'Y-m-d' }}">
+                                <button type="submit" class="btn btn-info btn-sm">
+                                    <i class="bi bi-cart-plus me-1"></i>Generate Shopping List
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Calendar Grid -->
+                <div class="p-3">
+                    <div class="row">
+                        {% for day in week_data %}
+                            <div class="col-md-6 col-lg-4">
+                                <div class="day-card {% if day.is_today %}today{% endif %}">
+                                    <div class="day-header">
+                                        {{ day.day_name }}
+                                        <small class="text-muted">{{ day.date|date:"M d" }}</small>
+                                    </div>
+                                    
+                                    <!-- Breakfast -->
+                                    <div class="meal-section">
+                                        <div class="meal-type">
+                                            <i class="bi bi-cup-hot text-warning"></i>Breakfast
+                                        </div>
+                                        {% for meal in day.meals.breakfast %}
+                                            <div class="meal-item" onclick="viewRecipe('{{ meal.recipe.get_absolute_url }}')">
+                                                <strong>{{ meal.recipe.title }}</strong>
+                                                <div class="small text-muted">{{ meal.servings }} servings</div>
+                                                <button class="remove-btn" onclick="event.stopPropagation(); removeMeal({{ meal.id }})">×</button>
+                                            </div>
+                                        {% empty %}
+                                            <button class="add-meal-btn" onclick="showAddMealModal('{{ day.date|date:'Y-m-d' }}', 'breakfast')">
+                                                + Add Breakfast
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <!-- Lunch -->
+                                    <div class="meal-section">
+                                        <div class="meal-type">
+                                            <i class="bi bi-bowl text-success"></i>Lunch
+                                        </div>
+                                        {% for meal in day.meals.lunch %}
+                                            <div class="meal-item" onclick="viewRecipe('{{ meal.recipe.get_absolute_url }}')">
+                                                <strong>{{ meal.recipe.title }}</strong>
+                                                <div class="small text-muted">{{ meal.servings }} servings</div>
+                                                <button class="remove-btn" onclick="event.stopPropagation(); removeMeal({{ meal.id }})">×</button>
+                                            </div>
+                                        {% empty %}
+                                            <button class="add-meal-btn" onclick="showAddMealModal('{{ day.date|date:'Y-m-d' }}', 'lunch')">
+                                                + Add Lunch
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <!-- Dinner -->
+                                    <div class="meal-section">
+                                        <div class="meal-type">
+                                            <i class="bi bi-dish text-danger"></i>Dinner
+                                        </div>
+                                        {% for meal in day.meals.dinner %}
+                                            <div class="meal-item" onclick="viewRecipe('{{ meal.recipe.get_absolute_url }}')">
+                                                <strong>{{ meal.recipe.title }}</strong>
+                                                <div class="small text-muted">{{ meal.servings }} servings</div>
+                                                <button class="remove-btn" onclick="event.stopPropagation(); removeMeal({{ meal.id }})">×</button>
+                                            </div>
+                                        {% empty %}
+                                            <button class="add-meal-btn" onclick="showAddMealModal('{{ day.date|date:'Y-m-d' }}', 'dinner')">
+                                                + Add Dinner
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <!-- Snack -->
+                                    <div class="meal-section">
+                                        <div class="meal-type">
+                                            <i class="bi bi-apple text-info"></i>Snack
+                                        </div>
+                                        {% for meal in day.meals.snack %}
+                                            <div class="meal-item" onclick="viewRecipe('{{ meal.recipe.get_absolute_url }}')">
+                                                <strong>{{ meal.recipe.title }}</strong>
+                                                <div class="small text-muted">{{ meal.servings }} servings</div>
+                                                <button class="remove-btn" onclick="event.stopPropagation(); removeMeal({{ meal.id }})">×</button>
+                                            </div>
+                                        {% empty %}
+                                            <button class="add-meal-btn" onclick="showAddMealModal('{{ day.date|date:'Y-m-d' }}', 'snack')">
+                                                + Add Snack
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
-
-            <!-- Calendar -->
-            <div class="meal-calendar">
-                <div class="calendar-header">
-                    <button class="btn btn-light btn-sm" onclick="navigateWeek({{ prev_week }})">
-                        <i class="bi bi-chevron-left"></i> Previous Week
-                    </button>
-                    <h5 class="mb-0">{{ week_start|date:"F d" }} - {{ week_end|date:"F d, Y" }}</h5>
-                    <button class="btn btn-light btn-sm" onclick="navigateWeek({{ next_week }})">
-                        Next Week <i class="bi bi-chevron-right"></i>
-                    </button>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="quick-actions">
+                <!-- Quick Add Recipe -->
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Quick Add Recipe</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_recipes %}
+                            {% for recipe in recent_recipes|slice:":5" %}
+                                <div class="d-flex align-items-center mb-2 p-2 border rounded" style="cursor: pointer;" 
+                                     onclick="selectQuickRecipe({{ recipe.id }}, '{{ recipe.title }}')">
+                                    {% if recipe.image %}
+                                        <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}" 
+                                             style="width: 30px; height: 30px; border-radius: 4px; object-fit: cover;" class="me-2">
+                                    {% endif %}
+                                    <div class="flex-grow-1">
+                                        <div class="small fw-bold">{{ recipe.title|truncatechars:20 }}</div>
+                                        <div class="small text-muted">{{ recipe.total_time }} min</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
                 </div>
-
-                <div class="calendar-grid">
-                    {% for day in week_data %}
-                    <div class="calendar-day {% if day.is_today %}today{% endif %}" data-date="{{ day.date|date:'Y-m-d' }}">
-                        <div class="day-header">
-                            <span>{{ day.day_name }}</span>
-                            <span class="badge badge-light">{{ day.date|date:"d" }}</span>
-                        </div>
-
-                        <div class="meal-type-sections">
-                            {% for meal_type, display_name in meal_types %}
-                            <div class="meal-type-section">
-                                <h6>{{ display_name }}</h6>
-                                <div class="meals" data-meal-type="{{ meal_type }}">
-                                    {% for meal in day.meals|default_if_none:meal_type %}
-                                        {% if meal in day.meals.breakfast and meal_type == 'breakfast' or meal in day.meals.lunch and meal_type == 'lunch' or meal in day.meals.dinner and meal_type == 'dinner' or meal in day.meals.snack and meal_type == 'snack' %}
-                                        <div class="meal-item" data-meal-id="{{ meal.id }}">
-                                            <span>{{ meal.recipe.title|truncatechars:20 }}</span>
-                                            <button class="remove-btn" onclick="removeMeal({{ meal.id }})">
-                                                <i class="bi bi-x"></i>
-                                            </button>
-                                        </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                    <button class="add-meal-btn" onclick="showAddMealModal('{{ day.date|date:'Y-m-d' }}', '{{ meal_type }}')">
-                                        <i class="bi bi-plus"></i> Add Meal
-                                    </button>
+                
+                <!-- Meal Plan Templates -->
+                <div class="card shadow mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Templates</h5>
+                        <a href="{% url 'meal_planning:templates' %}" class="btn btn-outline-primary btn-sm">View All</a>
+                    </div>
+                    <div class="card-body">
+                        {% for template in templates|slice:":3" %}
+                            <div class="template-card border p-2 mb-2" onclick="applyTemplate({{ template.id }}, '{{ template.name }}')">
+                                <div class="fw-bold small">{{ template.name }}</div>
+                                <div class="small text-muted">{{ template.description|truncatechars:50 }}</div>
+                                <div class="small text-muted">{{ template.items.count }} meals</div>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted small">No templates available</p>
+                            <a href="{% url 'meal_planning:template_create' %}" class="btn btn-outline-primary btn-sm">Create Template</a>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Week Summary -->
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0">Week Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <div class="fw-bold">{{ week_data|length }}</div>
+                                    <div class="small text-muted">Days</div>
                                 </div>
                             </div>
-                            {% endfor %}
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <div class="fw-bold" id="total-meals">0</div>
+                                    <div class="small text-muted">Meals</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -199,163 +365,211 @@
                 <h5 class="modal-title">Add Meal</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="addMealForm">
-                {% csrf_token %}
-                <div class="modal-body">
+            <div class="modal-body">
+                <form id="addMealForm">
+                    {% csrf_token %}
                     <input type="hidden" id="meal-date" name="date">
                     <input type="hidden" id="meal-type" name="meal_type">
                     
                     <div class="mb-3">
-                        <label for="recipe-select" class="form-label">Recipe</label>
-                        <select class="form-select" id="recipe-select" name="recipe" required>
+                        <label for="recipe-select" class="form-label">Recipe:</label>
+                        <select class="form-control" id="recipe-select" name="recipe" required>
                             <option value="">Select a recipe...</option>
                             {% for recipe in recent_recipes %}
-                            <option value="{{ recipe.id }}">{{ recipe.title }}</option>
+                                <option value="{{ recipe.id }}">{{ recipe.title }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="servings" class="form-label">Servings</label>
-                        <input type="number" class="form-control" id="servings" name="servings" value="1" min="1" required>
+                        <label for="servings" class="form-label">Servings:</label>
+                        <input type="number" class="form-control" id="servings" name="servings" 
+                               value="4" min="1" max="12" required>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="notes" class="form-label">Notes (Optional)</label>
+                        <label for="notes" class="form-label">Notes (optional):</label>
                         <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Meal</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Template Modal -->
-<div class="modal fade" id="templateModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Apply Meal Plan Template</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </form>
             </div>
-            <div class="modal-body">
-                {% if templates %}
-                <div class="list-group">
-                    {% for template in templates %}
-                    <a href="#" class="list-group-item list-group-item-action" onclick="applyTemplate({{ template.id }})">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">{{ template.name }}</h6>
-                        </div>
-                        <p class="mb-1">{{ template.description|truncatechars:100 }}</p>
-                    </a>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p class="text-muted">No templates available. <a href="{% url 'meal_planning:template_create' %}">Create one</a>?</p>
-                {% endif %}
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addMeal()">Add Meal</button>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
-function navigateWeek(offset) {
-    const url = new URL(window.location);
-    url.searchParams.set('week', offset);
-    window.location.href = url.toString();
+// Calculate total meals
+document.addEventListener('DOMContentLoaded', function() {
+    const totalMeals = document.querySelectorAll('.meal-item').length;
+    document.getElementById('total-meals').textContent = totalMeals;
+});
+
+// Export week (PDF and text options)
+function downloadCalendar() {
+    // Show options modal
+    const options = `
+        <div class="modal fade" id="exportModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Export Meal Plan</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Choose your export format:</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" onclick="downloadPDF(); $('#exportModal').modal('hide');">
+                                <i class="bi bi-file-pdf"></i> Download as PDF (Recommended)
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="downloadText(); $('#exportModal').modal('hide');">
+                                <i class="bi bi-file-text"></i> Download as Text
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to page if not exists
+    if (!document.getElementById('exportModal')) {
+        document.body.insertAdjacentHTML('beforeend', options);
+    }
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('exportModal'));
+    modal.show();
 }
 
+function downloadPDF() {
+    // Get current week parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const week = urlParams.get('week') || '0';
+    
+    // Open PDF export in new tab
+    const pdfUrl = `/meal-planning/export/pdf/?week=${week}`;
+    window.open(pdfUrl, '_blank');
+}
+
+function downloadText() {
+    // Original text export function
+    let text = "Meal Plan: {{ week_start|date:'M d' }} - {{ week_end|date:'M d, Y' }}\n\n";
+    {% for day in week_data %}
+        text += "{{ day.day_name }} ({{ day.date|date:'Y-m-d' }}):\n";
+        {% for meal in day.meals.breakfast %}
+            text += "  Breakfast: {{ meal.recipe.title }} ({{ meal.servings }} servings)\n";
+        {% endfor %}
+        {% for meal in day.meals.lunch %}
+            text += "  Lunch: {{ meal.recipe.title }} ({{ meal.servings }} servings)\n";
+        {% endfor %}
+        {% for meal in day.meals.dinner %}
+            text += "  Dinner: {{ meal.recipe.title }} ({{ meal.servings }} servings)\n";
+        {% endfor %}
+        {% for meal in day.meals.snack %}
+            text += "  Snack: {{ meal.recipe.title }} ({{ meal.servings }} servings)\n";
+        {% endfor %}
+        text += "\n";
+    {% endfor %}
+
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = "meal_plan_week.txt";
+    a.click();
+}
+
+// ... rest of your JS unchanged ...
 function showAddMealModal(date, mealType) {
     document.getElementById('meal-date').value = date;
     document.getElementById('meal-type').value = mealType;
-    new bootstrap.Modal(document.getElementById('addMealModal')).show();
+    
+    // Update modal title
+    const modalTitle = document.querySelector('#addMealModal .modal-title');
+    modalTitle.textContent = `Add ${mealType.charAt(0).toUpperCase() + mealType.slice(1)} for ${date}`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('addMealModal'));
+    modal.show();
 }
 
-document.getElementById('addMealForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+function addMeal() {
+    const form = document.getElementById('addMealForm');
+    const formData = new FormData(form);
     
-    const formData = new FormData(this);
-    
-    fetch('{% url "meal_planning:add_meal" %}', {
+    fetch("{% url 'meal_planning:plan_create' %}", {
         method: 'POST',
         body: formData,
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        }
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             location.reload();
         } else {
-            alert('Error adding meal: ' + JSON.stringify(data.errors));
+            alert('Error adding meal: ' + data.message);
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding meal');
     });
-});
+}
 
 function removeMeal(mealId) {
     if (confirm('Remove this meal from your plan?')) {
-        fetch(`/meal-planning/remove/${mealId}/`, {
+        fetch(`/meal-planning/plans/${mealId}/remove/`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            }
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 location.reload();
+            } else {
+                alert('Error removing meal: ' + data.message);
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing meal');
         });
     }
 }
 
-function generateShoppingList() {
-    const weekStart = '{{ week_start|date:"Y-m-d" }}';
-    
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '{% url "meal_planning:generate_shopping_list" %}';
-    
-    const csrfInput = document.createElement('input');
-    csrfInput.type = 'hidden';
-    csrfInput.name = 'csrfmiddlewaretoken';
-    csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
-    const weekInput = document.createElement('input');
-    weekInput.type = 'hidden';
-    weekInput.name = 'week_start';
-    weekInput.value = weekStart;
-    
-    form.appendChild(csrfInput);
-    form.appendChild(weekInput);
-    document.body.appendChild(form);
-    form.submit();
+function viewRecipe(url) {
+    window.open(url, '_blank');
 }
 
-function applyTemplate(templateId) {
-    const weekStart = '{{ week_start|date:"Y-m-d" }}';
-    
-    if (confirm('Apply this template to the current week? This will add meals to your plan.')) {
+function selectQuickRecipe(recipeId, recipeName) {
+    document.getElementById('recipe-select').value = recipeId;
+    showAddMealModal(new Date().toISOString().split('T')[0], 'dinner');
+}
+
+function applyTemplate(templateId, templateName) {
+    if (confirm(`Apply "${templateName}" template to this week?`)) {
+        const formData = new FormData();
+        formData.append('week_start', '{{ week_start|date:"Y-m-d" }}');
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
         fetch(`/meal-planning/templates/${templateId}/apply/`, {
             method: 'POST',
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `week_start=${weekStart}`
+            body: formData,
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 location.reload();
+            } else {
+                alert('Error applying template: ' + data.message);
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error applying template');
         });
     }
 }

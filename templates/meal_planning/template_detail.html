@@ -1,0 +1,369 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ template.name }} - Meal Plan Template{% endblock %}
+
+{% block extra_css %}
+<style>
+    .meal-slot {
+        min-height: 80px;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    .meal-slot.has-meal {
+        border-style: solid;
+        border-color: #007bff;
+        background-color: #f8f9fa;
+    }
+    
+    .meal-item {
+        text-align: center;
+        width: 100%;
+    }
+    
+    .meal-item img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 5px;
+    }
+    
+    .day-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px;
+        text-align: center;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    
+    .template-actions {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <!-- Template Header -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h1 class="card-title">{{ template.name }}</h1>
+                            <p class="text-muted lead">{{ template.description }}</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            {% if template.is_public %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-globe me-1"></i>Public
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-lock me-1"></i>Private
+                                </span>
+                            {% endif %}
+                            
+                            {% if template.user == user %}
+                                <span class="badge bg-primary">Your Template</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="bi bi-calendar-week display-6 text-primary"></i>
+                                <div class="mt-2">
+                                    <strong>{{ template.items.count }}</strong>
+                                    <div class="small text-muted">Total Meals</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="bi bi-person display-6 text-success"></i>
+                                <div class="mt-2">
+                                    <strong>{{ template.user.username }}</strong>
+                                    <div class="small text-muted">Created by</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="bi bi-clock display-6 text-warning"></i>
+                                <div class="mt-2">
+                                    <strong>{{ template.created_at|date:"M d" }}</strong>
+                                    <div class="small text-muted">Created</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="bi bi-star display-6 text-info"></i>
+                                <div class="mt-2">
+                                    <strong>4.5</strong>
+                                    <div class="small text-muted">Rating</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Meal Plan -->
+            <div class="card shadow">
+                <div class="card-header">
+                    <h3 class="mb-0">Weekly Meal Plan</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for day in week_data %}
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="day-header">
+                                    <h5 class="mb-0">{{ day.day_name }}</h5>
+                                </div>
+                                
+                                <!-- Breakfast -->
+                                <div class="meal-slot {% if day.meals.breakfast %}has-meal{% endif %}">
+                                    {% if day.meals.breakfast %}
+                                        {% for meal in day.meals.breakfast %}
+                                            <div class="meal-item">
+                                                {% if meal.recipe.image %}
+                                                    <img src="{{ meal.recipe.image.url }}" alt="{{ meal.recipe.title }}">
+                                                {% endif %}
+                                                <div class="fw-bold small">Breakfast</div>
+                                                <div class="small">{{ meal.recipe.title }}</div>
+                                                <div class="small text-muted">{{ meal.servings }} servings</div>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-muted small">
+                                            <i class="bi bi-cup-hot me-1"></i>Breakfast
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Lunch -->
+                                <div class="meal-slot {% if day.meals.lunch %}has-meal{% endif %}">
+                                    {% if day.meals.lunch %}
+                                        {% for meal in day.meals.lunch %}
+                                            <div class="meal-item">
+                                                {% if meal.recipe.image %}
+                                                    <img src="{{ meal.recipe.image.url }}" alt="{{ meal.recipe.title }}">
+                                                {% endif %}
+                                                <div class="fw-bold small">Lunch</div>
+                                                <div class="small">{{ meal.recipe.title }}</div>
+                                                <div class="small text-muted">{{ meal.servings }} servings</div>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-muted small">
+                                            <i class="bi bi-bowl me-1"></i>Lunch
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Dinner -->
+                                <div class="meal-slot {% if day.meals.dinner %}has-meal{% endif %}">
+                                    {% if day.meals.dinner %}
+                                        {% for meal in day.meals.dinner %}
+                                            <div class="meal-item">
+                                                {% if meal.recipe.image %}
+                                                    <img src="{{ meal.recipe.image.url }}" alt="{{ meal.recipe.title }}">
+                                                {% endif %}
+                                                <div class="fw-bold small">Dinner</div>
+                                                <div class="small">{{ meal.recipe.title }}</div>
+                                                <div class="small text-muted">{{ meal.servings }} servings</div>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-muted small">
+                                            <i class="bi bi-dish me-1"></i>Dinner
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Snack -->
+                                <div class="meal-slot {% if day.meals.snack %}has-meal{% endif %}">
+                                    {% if day.meals.snack %}
+                                        {% for meal in day.meals.snack %}
+                                            <div class="meal-item">
+                                                {% if meal.recipe.image %}
+                                                    <img src="{{ meal.recipe.image.url }}" alt="{{ meal.recipe.title }}">
+                                                {% endif %}
+                                                <div class="fw-bold small">Snack</div>
+                                                <div class="small">{{ meal.recipe.title }}</div>
+                                                <div class="small text-muted">{{ meal.servings }} servings</div>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-muted small">
+                                            <i class="bi bi-apple me-1"></i>Snack
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="template-actions">
+                <!-- Action Buttons -->
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" onclick="showApplyTemplateModal()">
+                                <i class="bi bi-calendar-plus me-2"></i>Apply to Week
+                            </button>
+                            
+                            {% if template.user == user %}
+                                <a href="{% url 'meal_planning:template_edit_meals' template.pk %}" 
+                                   class="btn btn-primary">
+                                    <i class="bi bi-pencil me-2"></i>Edit Meals
+                                </a>
+                                <a href="{% url 'meal_planning:template_edit' template.pk %}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="bi bi-gear me-2"></i>Settings
+                                </a>
+                            {% else %}
+                                <form method="POST" action="{% url 'meal_planning:template_copy' template.pk %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        <i class="bi bi-files me-2"></i>Copy Template
+                                    </button>
+                                </form>
+                            {% endif %}
+                            
+                            <button class="btn btn-outline-info" onclick="shareTemplate()">
+                                <i class="bi bi-share me-2"></i>Share Template
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Template Info -->
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0">Template Info</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Created by:</strong> {{ template.user.get_full_name|default:template.user.username }}</p>
+                        <p><strong>Created:</strong> {{ template.created_at|date:"M d, Y" }}</p>
+                        <p><strong>Total meals:</strong> {{ template.items.count }}</p>
+                        <p><strong>Visibility:</strong> 
+                            {% if template.is_public %}
+                                <span class="badge bg-success">Public</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Private</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Apply Template Modal -->
+<div class="modal fade" id="applyTemplateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Apply Template to Week</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="applyTemplateForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="weekStart" class="form-label">Week Starting:</label>
+                        <input type="date" class="form-control" id="weekStart" name="week_start" required>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="clearExisting" name="clear_existing">
+                        <label class="form-check-label" for="clearExisting">
+                            Clear existing meal plans for this week
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="applyTemplate()">Apply Template</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showApplyTemplateModal() {
+    // Set default date to next Monday
+    const today = new Date();
+    const nextMonday = new Date(today);
+    nextMonday.setDate(today.getDate() + (1 + 7 - today.getDay()) % 7);
+    
+    document.getElementById('weekStart').value = nextMonday.toISOString().split('T')[0];
+    
+    const modal = new bootstrap.Modal(document.getElementById('applyTemplateModal'));
+    modal.show();
+}
+
+function applyTemplate() {
+    const form = document.getElementById('applyTemplateForm');
+    const formData = new FormData(form);
+    
+    fetch(`/meal-planning/templates/{{ template.pk }}/apply/`, {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Template applied successfully! ${data.applied_count} meals added.`);
+            window.location.href = '/meal-planning/calendar/';
+        } else {
+            alert('Error applying template: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error applying template');
+    });
+}
+
+function shareTemplate() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ template.name|escapejs }}',
+            text: '{{ template.description|escapejs }}',
+            url: window.location.href
+        });
+    } else {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Template URL copied to clipboard!');
+        });
+    }
+}
+</script>
+{% endblock %}

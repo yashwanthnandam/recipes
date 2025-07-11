@@ -10,7 +10,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DEBUG=1
+      - DEBUG=False
     networks:
       - recipes_network
     x-tinkr:

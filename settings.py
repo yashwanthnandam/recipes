@@ -28,7 +28,7 @@ DJANGO_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
-
+OPENAI_API_KEY= os.getenv('OPENAI_API_KEY', '')
 THIRD_PARTY_APPS = [
     # Add any third-party apps here when you install them
 ]

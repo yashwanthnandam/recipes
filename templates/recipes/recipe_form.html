@@ -67,14 +67,17 @@
                             <div class="col-md-3 mb-3">
                                 <label for="{{ form.prep_time.id_for_label }}" class="form-label fw-bold">Prep Time (min) *</label>
                                 {{ form.prep_time }}
+                                <div class="form-text">{{ form.prep_time.help_text }}</div>
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label for="{{ form.cook_time.id_for_label }}" class="form-label fw-bold">Cook Time (min) *</label>
                                 {{ form.cook_time }}
+                                <div class="form-text">{{ form.cook_time.help_text }}</div>
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label for="{{ form.servings.id_for_label }}" class="form-label fw-bold">Servings *</label>
                                 {{ form.servings }}
+                                <div class="form-text">{{ form.servings.help_text }}</div>
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label for="{{ form.difficulty.id_for_label }}" class="form-label fw-bold">Difficulty</label>
@@ -82,11 +85,44 @@
                             </div>
                         </div>
 
-                        <!-- Instructions -->
+                        <!-- Instructions (optional if using steps) -->
                         <div class="mb-4">
-                            <label for="{{ form.instructions.id_for_label }}" class="form-label fw-bold">Instructions *</label>
+                            <label for="{{ form.instructions.id_for_label }}" class="form-label fw-bold">Instructions</label>
                             {{ form.instructions }}
-                            <div class="form-text">Step-by-step cooking instructions. You can use line breaks for steps.</div>
+                            <div class="form-text">General instructions or notes (optional if you use steps below).</div>
+                        </div>
+
+                        <!-- Recipe Steps Formset -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Steps</label>
+                            <div class="form-text">Add each step separately below. Use the step number to order them.</div>
+                            {{ step_formset.management_form }}
+                            {% for step_form in step_formset %}
+                                <div class="card mb-2 p-2">
+                                    {% if step_form.errors %}
+                                        <div class="alert alert-danger">
+                                            {% for error in step_form.non_field_errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="row">
+                                        <div class="col-md-2 mb-2">
+                                            <label class="form-label">Step #</label>
+                                            {{ step_form.step_number }}
+                                        </div>
+                                        <div class="col-md-7 mb-2">
+                                            <label class="form-label">Instruction</label>
+                                            {{ step_form.instruction }}
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <label class="form-label">Time Required (min)</label>
+                                            {{ step_form.time_required }}
+                                        </div>
+                                    </div>
+                                    {{ step_form.DELETE }}
+                                </div>
+                            {% endfor %}
                         </div>
 
                         <!-- Visibility -->

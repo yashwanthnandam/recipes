@@ -1,0 +1,66 @@
+# Byte-compiled / optimized / DLL Python files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Django database (usually do not commit, but OK for dev)
+db.sqlite3
+
+# Media files
+
+
+# Static files (ignore collected, not source)
+static/
+staticfiles/
+
+# Django migration and admin cache files
+**/__pycache__/
+**/migrations/__pycache__/
+**/admin.pyc
+**/migrations/*.pyc
+
+# VS Code and IDE files
+.vscode/
+.idea/
+*.swp
+
+# Mac OS files
+.DS_Store
+
+# Environment variables and secrets
+.env
+*.env
+
+# Docker artifacts
+*.log
+*.pid
+
+# Node/npm
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Test coverage
+htmlcov/
+.coverage
+.tox/
+.pytest_cache/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Python wheels
+*.whl
+
+# Backup files
+*~
+*.bak
+
+# Custom
+apps/*/__pycache__/
+apps/*/migrations/__pycache__/
+apps/*/migrations/*.pyc

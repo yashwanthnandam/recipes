@@ -1,0 +1,733 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit {{ template.name }} - Meal Plan Template{% endblock %}
+
+{% block extra_css %}
+<style>
+    .recipe-search {
+        position: relative;
+    }
+    
+    .recipe-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 0 0 8px 8px;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+    }
+    
+    .recipe-item {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .recipe-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .recipe-item img {
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        object-fit: cover;
+    }
+    
+    .recipe-info {
+        flex-grow: 1;
+    }
+    
+    .recipe-title {
+        font-weight: 500;
+        margin-bottom: 2px;
+    }
+    
+    .recipe-meta {
+        font-size: 0.8rem;
+        color: #666;
+    }
+    
+    .meal-slot {
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        min-height: 120px;
+        transition: all 0.3s ease;
+    }
+    
+    .meal-slot.has-recipe {
+        border-style: solid;
+        border-color: #007bff;
+        background-color: #f8f9fa;
+    }
+    
+    .meal-slot.has-recipe:hover {
+        border-color: #0056b3;
+        background-color: #e3f2fd;
+    }
+    
+    .selected-recipe {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #007bff;
+    }
+    
+    .selected-recipe img {
+        width: 50px;
+        height: 50px;
+        border-radius: 6px;
+        object-fit: cover;
+    }
+    
+    .day-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px;
+        text-align: center;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+    
+    .meal-type-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .remove-recipe-btn {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #dc3545;
+        color: white;
+        border: none;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .servings-input {
+        width: 80px;
+        margin-top: 8px;
+    }
+    
+    .save-template-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+        border-radius: 50px;
+        padding: 15px 25px;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+    }
+    
+    .template-progress {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+    }
+    
+    .meal-type-breakfast { border-left: 4px solid #ffc107; }
+    .meal-type-lunch { border-left: 4px solid #28a745; }
+    .meal-type-dinner { border-left: 4px solid #dc3545; }
+    .meal-type-snack { border-left: 4px solid #17a2b8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <!-- Header -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="mb-1">Edit {{ template.name }}</h1>
+                            <p class="text-muted">{{ template.description }}</p>
+                        </div>
+                        <div>
+                            <a href="{% url 'meal_planning:template_detail' template.pk %}" 
+                               class="btn btn-outline-secondary me-2">
+                                <i class="bi bi-arrow-left me-1"></i>Back to Template
+                            </a>
+                            <button type="button" class="btn btn-success" onclick="saveTemplate()">
+                                <i class="bi bi-check-lg me-1"></i>Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Meal Plan Editor -->
+            <form id="templateForm" method="POST">
+                {% csrf_token %}
+                <div class="row">
+                    {% for day in week_data %}
+                        <div class="col-lg-6 mb-4">
+                            <div class="day-header">
+                                <h4 class="mb-0">{{ day.day_name }}</h4>
+                            </div>
+                            
+                            <!-- Breakfast -->
+                            <div class="meal-slot meal-type-breakfast {% if day.meals.breakfast %}has-recipe{% endif %}" 
+                                 data-day="{{ day.day_number }}" data-meal="breakfast">
+                                <div class="meal-type-label">
+                                    <i class="bi bi-cup-hot"></i>Breakfast
+                                </div>
+                                <div class="recipe-container">
+                                    {% if day.meals.breakfast %}
+                                        <div class="selected-recipe" style="position: relative;">
+                                            <button type="button" class="remove-recipe-btn" onclick="removeRecipe(this)">×</button>
+                                            {% if day.meals.breakfast.recipe.image %}
+                                                <img src="{{ day.meals.breakfast.recipe.image.url }}" 
+                                                     alt="{{ day.meals.breakfast.recipe.title }}">
+                                            {% else %}
+                                                <div style="width: 50px; height: 50px; background: #f8f9fa; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="bi bi-image text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div class="flex-grow-1">
+                                                <div class="recipe-title">{{ day.meals.breakfast.recipe.title }}</div>
+                                                <div class="recipe-meta">
+                                                    {% if day.meals.breakfast.recipe.category %}
+                                                        {{ day.meals.breakfast.recipe.category.name }} • 
+                                                    {% endif %}
+                                                    {{ day.meals.breakfast.recipe.total_time }} min
+                                                </div>
+                                            </div>
+                                            <input type="hidden" name="day_{{ day.day_number }}_breakfast_recipe" 
+                                                   value="{{ day.meals.breakfast.recipe.pk }}">
+                                            <input type="number" class="form-control servings-input" 
+                                                   name="day_{{ day.day_number }}_breakfast_servings" 
+                                                   value="{{ day.meals.breakfast.servings }}" 
+                                                   min="1" max="12" placeholder="Servings">
+                                        </div>
+                                    {% else %}
+                                        <div class="recipe-search">
+                                            <input type="text" class="form-control recipe-search-input" 
+                                                   placeholder="Search for breakfast recipe..."
+                                                   data-day="{{ day.day_number }}" data-meal="breakfast">
+                                            <div class="recipe-dropdown"></div>
+                                        </div>
+                                        <input type="hidden" name="day_{{ day.day_number }}_breakfast_recipe" value="">
+                                        <input type="hidden" name="day_{{ day.day_number }}_breakfast_servings" value="">
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Lunch -->
+                            <div class="meal-slot meal-type-lunch {% if day.meals.lunch %}has-recipe{% endif %}" 
+                                 data-day="{{ day.day_number }}" data-meal="lunch">
+                                <div class="meal-type-label">
+                                    <i class="bi bi-bowl"></i>Lunch
+                                </div>
+                                <div class="recipe-container">
+                                    {% if day.meals.lunch %}
+                                        <div class="selected-recipe" style="position: relative;">
+                                            <button type="button" class="remove-recipe-btn" onclick="removeRecipe(this)">×</button>
+                                            {% if day.meals.lunch.recipe.image %}
+                                                <img src="{{ day.meals.lunch.recipe.image.url }}" 
+                                                     alt="{{ day.meals.lunch.recipe.title }}">
+                                            {% else %}
+                                                <div style="width: 50px; height: 50px; background: #f8f9fa; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="bi bi-image text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div class="flex-grow-1">
+                                                <div class="recipe-title">{{ day.meals.lunch.recipe.title }}</div>
+                                                <div class="recipe-meta">
+                                                    {% if day.meals.lunch.recipe.category %}
+                                                        {{ day.meals.lunch.recipe.category.name }} • 
+                                                    {% endif %}
+                                                    {{ day.meals.lunch.recipe.total_time }} min
+                                                </div>
+                                            </div>
+                                            <input type="hidden" name="day_{{ day.day_number }}_lunch_recipe" 
+                                                   value="{{ day.meals.lunch.recipe.pk }}">
+                                            <input type="number" class="form-control servings-input" 
+                                                   name="day_{{ day.day_number }}_lunch_servings" 
+                                                   value="{{ day.meals.lunch.servings }}" 
+                                                   min="1" max="12" placeholder="Servings">
+                                        </div>
+                                    {% else %}
+                                        <div class="recipe-search">
+                                            <input type="text" class="form-control recipe-search-input" 
+                                                   placeholder="Search for lunch recipe..."
+                                                   data-day="{{ day.day_number }}" data-meal="lunch">
+                                            <div class="recipe-dropdown"></div>
+                                        </div>
+                                        <input type="hidden" name="day_{{ day.day_number }}_lunch_recipe" value="">
+                                        <input type="hidden" name="day_{{ day.day_number }}_lunch_servings" value="">
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Dinner -->
+                            <div class="meal-slot meal-type-dinner {% if day.meals.dinner %}has-recipe{% endif %}" 
+                                 data-day="{{ day.day_number }}" data-meal="dinner">
+                                <div class="meal-type-label">
+                                    <i class="bi bi-dish"></i>Dinner
+                                </div>
+                                <div class="recipe-container">
+                                    {% if day.meals.dinner %}
+                                        <div class="selected-recipe" style="position: relative;">
+                                            <button type="button" class="remove-recipe-btn" onclick="removeRecipe(this)">×</button>
+                                            {% if day.meals.dinner.recipe.image %}
+                                                <img src="{{ day.meals.dinner.recipe.image.url }}" 
+                                                     alt="{{ day.meals.dinner.recipe.title }}">
+                                            {% else %}
+                                                <div style="width: 50px; height: 50px; background: #f8f9fa; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="bi bi-image text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div class="flex-grow-1">
+                                                <div class="recipe-title">{{ day.meals.dinner.recipe.title }}</div>
+                                                <div class="recipe-meta">
+                                                    {% if day.meals.dinner.recipe.category %}
+                                                        {{ day.meals.dinner.recipe.category.name }} • 
+                                                    {% endif %}
+                                                    {{ day.meals.dinner.recipe.total_time }} min
+                                                </div>
+                                            </div>
+                                            <input type="hidden" name="day_{{ day.day_number }}_dinner_recipe" 
+                                                   value="{{ day.meals.dinner.recipe.pk }}">
+                                            <input type="number" class="form-control servings-input" 
+                                                   name="day_{{ day.day_number }}_dinner_servings" 
+                                                   value="{{ day.meals.dinner.servings }}" 
+                                                   min="1" max="12" placeholder="Servings">
+                                        </div>
+                                    {% else %}
+                                        <div class="recipe-search">
+                                            <input type="text" class="form-control recipe-search-input" 
+                                                   placeholder="Search for dinner recipe..."
+                                                   data-day="{{ day.day_number }}" data-meal="dinner">
+                                            <div class="recipe-dropdown"></div>
+                                        </div>
+                                        <input type="hidden" name="day_{{ day.day_number }}_dinner_recipe" value="">
+                                        <input type="hidden" name="day_{{ day.day_number }}_dinner_servings" value="">
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Snack -->
+                            <div class="meal-slot meal-type-snack {% if day.meals.snack %}has-recipe{% endif %}" 
+                                 data-day="{{ day.day_number }}" data-meal="snack">
+                                <div class="meal-type-label">
+                                    <i class="bi bi-apple"></i>Snack
+                                </div>
+                                <div class="recipe-container">
+                                    {% if day.meals.snack %}
+                                        <div class="selected-recipe" style="position: relative;">
+                                            <button type="button" class="remove-recipe-btn" onclick="removeRecipe(this)">×</button>
+                                            {% if day.meals.snack.recipe.image %}
+                                                <img src="{{ day.meals.snack.recipe.image.url }}" 
+                                                     alt="{{ day.meals.snack.recipe.title }}">
+                                            {% else %}
+                                                <div style="width: 50px; height: 50px; background: #f8f9fa; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="bi bi-image text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div class="flex-grow-1">
+                                                <div class="recipe-title">{{ day.meals.snack.recipe.title }}</div>
+                                                <div class="recipe-meta">
+                                                    {% if day.meals.snack.recipe.category %}
+                                                        {{ day.meals.snack.recipe.category.name }} • 
+                                                    {% endif %}
+                                                    {{ day.meals.snack.recipe.total_time }} min
+                                                </div>
+                                            </div>
+                                            <input type="hidden" name="day_{{ day.day_number }}_snack_recipe" 
+                                                   value="{{ day.meals.snack.recipe.pk }}">
+                                            <input type="number" class="form-control servings-input" 
+                                                   name="day_{{ day.day_number }}_snack_servings" 
+                                                   value="{{ day.meals.snack.servings }}" 
+                                                   min="1" max="12" placeholder="Servings">
+                                        </div>
+                                    {% else %}
+                                        <div class="recipe-search">
+                                            <input type="text" class="form-control recipe-search-input" 
+                                                   placeholder="Search for snack recipe..."
+                                                   data-day="{{ day.day_number }}" data-meal="snack">
+                                            <div class="recipe-dropdown"></div>
+                                        </div>
+                                        <input type="hidden" name="day_{{ day.day_number }}_snack_recipe" value="">
+                                        <input type="hidden" name="day_{{ day.day_number }}_snack_servings" value="">
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </form>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="template-progress">
+                <!-- Progress Card -->
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Template Progress</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small>Meals Added</small>
+                                <small id="progress-text">0/28</small>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" id="progress-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="row text-center small">
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <i class="bi bi-cup-hot text-warning"></i>
+                                    <div id="breakfast-count">0</div>
+                                    <div class="text-muted">Breakfast</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <i class="bi bi-bowl text-success"></i>
+                                    <div id="lunch-count">0</div>
+                                    <div class="text-muted">Lunch</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row text-center small mt-2">
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <i class="bi bi-dish text-danger"></i>
+                                    <div id="dinner-count">0</div>
+                                    <div class="text-muted">Dinner</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <i class="bi bi-apple text-info"></i>
+                                    <div id="snack-count">0</div>
+                                    <div class="text-muted">Snack</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary btn-sm" onclick="clearAllMeals()">
+                                <i class="bi bi-trash me-1"></i>Clear All Meals
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="fillRandomMeals()">
+                                <i class="bi bi-shuffle me-1"></i>Fill Random Meals
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" onclick="copyFromPreviousDay()">
+                                <i class="bi bi-copy me-1"></i>Copy Previous Day
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recipe Categories -->
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0">Browse by Category</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-1">
+                            {% for category in categories %}
+                                <button class="btn btn-outline-secondary btn-sm text-start" 
+                                        onclick="filterByCategory('{{ category.id }}')">
+                                    {{ category.icon }} {{ category.name }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fixed Save Button -->
+<button type="button" class="btn btn-success save-template-btn" onclick="saveTemplate()">
+    <i class="bi bi-check-lg me-2"></i>Save Template
+</button>
+
+<script>
+let searchTimeout;
+let currentDropdown = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateProgress();
+    setupRecipeSearch();
+});
+
+function setupRecipeSearch() {
+    const searchInputs = document.querySelectorAll('.recipe-search-input');
+    
+    searchInputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            const dropdown = e.target.nextElementSibling;
+            
+            if (query.length >= 2) {
+                searchTimeout = setTimeout(() => {
+                    searchRecipes(query, dropdown, e.target);
+                }, 300);
+            } else {
+                dropdown.style.display = 'none';
+            }
+        });
+        
+        input.addEventListener('focus', function(e) {
+            if (e.target.value.length >= 2) {
+                const dropdown = e.target.nextElementSibling;
+                dropdown.style.display = 'block';
+            }
+        });
+        
+        input.addEventListener('blur', function(e) {
+            // Delay hiding to allow clicking on dropdown items
+            setTimeout(() => {
+                const dropdown = e.target.nextElementSibling;
+                dropdown.style.display = 'none';
+            }, 200);
+        });
+    });
+}
+
+function searchRecipes(query, dropdown, input) {
+    fetch(`/meal-planning/recipe-search/?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            displayRecipeResults(data.recipes, dropdown, input);
+        })
+        .catch(error => {
+            console.error('Error searching recipes:', error);
+        });
+}
+
+function displayRecipeResults(recipes, dropdown, input) {
+    dropdown.innerHTML = '';
+    
+    if (recipes.length === 0) {
+        dropdown.innerHTML = '<div class="recipe-item text-muted">No recipes found</div>';
+    } else {
+        recipes.forEach(recipe => {
+            const item = document.createElement('div');
+            item.className = 'recipe-item';
+            item.innerHTML = `
+                ${recipe.image_url ? 
+                    `<img src="${recipe.image_url}" alt="${recipe.title}">` : 
+                    '<div style="width: 40px; height: 40px; background: #f8f9fa; border-radius: 4px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-image text-muted"></i></div>'
+                }
+                <div class="recipe-info">
+                    <div class="recipe-title">${recipe.title}</div>
+                    <div class="recipe-meta">
+                        ${recipe.category ? recipe.category + ' • ' : ''}
+                        ${recipe.prep_time + recipe.cook_time} min • 
+                        ${recipe.servings} servings
+                    </div>
+                </div>
+            `;
+            
+            item.addEventListener('click', () => {
+                selectRecipe(recipe, input);
+                dropdown.style.display = 'none';
+            });
+            
+            dropdown.appendChild(item);
+        });
+    }
+    
+    dropdown.style.display = 'block';
+}
+
+function selectRecipe(recipe, input) {
+    const mealSlot = input.closest('.meal-slot');
+    const day = mealSlot.dataset.day;
+    const meal = mealSlot.dataset.meal;
+    const container = mealSlot.querySelector('.recipe-container');
+    
+    // Create selected recipe HTML
+    const selectedRecipeHTML = `
+        <div class="selected-recipe" style="position: relative;">
+            <button type="button" class="remove-recipe-btn" onclick="removeRecipe(this)">×</button>
+            ${recipe.image_url ? 
+                `<img src="${recipe.image_url}" alt="${recipe.title}">` : 
+                '<div style="width: 50px; height: 50px; background: #f8f9fa; border-radius: 6px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-image text-muted"></i></div>'
+            }
+            <div class="flex-grow-1">
+                <div class="recipe-title">${recipe.title}</div>
+                <div class="recipe-meta">
+                    ${recipe.category ? recipe.category + ' • ' : ''}
+                    ${recipe.prep_time + recipe.cook_time} min
+                </div>
+            </div>
+            <input type="hidden" name="day_${day}_${meal}_recipe" value="${recipe.id}">
+            <input type="number" class="form-control servings-input" 
+                   name="day_${day}_${meal}_servings" 
+                   value="4" min="1" max="12" placeholder="Servings">
+        </div>
+    `;
+    
+    container.innerHTML = selectedRecipeHTML;
+    mealSlot.classList.add('has-recipe');
+    
+    updateProgress();
+}
+
+function removeRecipe(button) {
+    const mealSlot = button.closest('.meal-slot');
+    const day = mealSlot.dataset.day;
+    const meal = mealSlot.dataset.meal;
+    const container = mealSlot.querySelector('.recipe-container');
+    
+    // Reset to search input
+    const searchHTML = `
+        <div class="recipe-search">
+            <input type="text" class="form-control recipe-search-input" 
+                   placeholder="Search for ${meal} recipe..."
+                   data-day="${day}" data-meal="${meal}">
+            <div class="recipe-dropdown"></div>
+        </div>
+        <input type="hidden" name="day_${day}_${meal}_recipe" value="">
+        <input type="hidden" name="day_${day}_${meal}_servings" value="">
+    `;
+    
+    container.innerHTML = searchHTML;
+    mealSlot.classList.remove('has-recipe');
+    
+    // Re-setup search for the new input
+    setupRecipeSearch();
+    updateProgress();
+}
+
+function updateProgress() {
+    const totalSlots = 28; // 7 days × 4 meals
+    const filledSlots = document.querySelectorAll('.meal-slot.has-recipe').length;
+    const percentage = (filledSlots / totalSlots) * 100;
+    
+    document.getElementById('progress-bar').style.width = percentage + '%';
+    document.getElementById('progress-text').textContent = `${filledSlots}/${totalSlots}`;
+    
+    // Update meal type counts
+    document.getElementById('breakfast-count').textContent = 
+        document.querySelectorAll('.meal-slot[data-meal="breakfast"].has-recipe').length;
+    document.getElementById('lunch-count').textContent = 
+        document.querySelectorAll('.meal-slot[data-meal="lunch"].has-recipe').length;
+    document.getElementById('dinner-count').textContent = 
+        document.querySelectorAll('.meal-slot[data-meal="dinner"].has-recipe').length;
+    document.getElementById('snack-count').textContent = 
+        document.querySelectorAll('.meal-slot[data-meal="snack"].has-recipe').length;
+}
+
+function saveTemplate() {
+    const form = document.getElementById('templateForm');
+    const formData = new FormData(form);
+    
+    // Show loading state
+    const saveBtn = document.querySelector('.save-template-btn');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i>Saving...';
+    saveBtn.disabled = true;
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => {
+        if (response.ok) {
+            window.location.href = `/meal-planning/templates/{{ template.pk }}/`;
+        } else {
+            alert('Error saving template. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving template. Please try again.');
+    })
+    .finally(() => {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+function clearAllMeals() {
+    if (confirm('Are you sure you want to clear all meals from this template?')) {
+        document.querySelectorAll('.meal-slot.has-recipe').forEach(slot => {
+            const removeBtn = slot.querySelector('.remove-recipe-btn');
+            if (removeBtn) {
+                removeRecipe(removeBtn);
+            }
+        });
+    }
+}
+
+function fillRandomMeals() {
+    if (confirm('Fill empty meal slots with random recipes?')) {
+        // This would require an AJAX call to get random recipes
+        alert('This feature would randomly fill empty slots with appropriate recipes for each meal type.');
+    }
+}
+
+function copyFromPreviousDay() {
+    alert('This feature would copy meals from the previous day to the next day.');
+}
+
+function filterByCategory(categoryId) {
+    // This would filter the recipe search by category
+    alert(`Filtering recipes by category ID: ${categoryId}`);
+}
+
+// Auto-save functionality (optional)
+let autoSaveInterval;
+function enableAutoSave() {
+    autoSaveInterval = setInterval(() => {
+        // Auto-save logic here
+    }, 30000); // Auto-save every 30 seconds
+}
+
+// Clean up on page unload
+window.addEventListener('beforeunload', function(e) {
+    if (autoSaveInterval) {
+        clearInterval(autoSaveInterval);
+    }
+});
+</script>
+{% endblock %}

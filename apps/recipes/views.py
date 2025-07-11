@@ -16,7 +16,7 @@ class RecipeListView(ListView):
     paginate_by = 12
     
     def get_queryset(self):
-        queryset = Recipe.objects.filter(is_public=True).select_related('author', 'category')
+        queryset = Recipe.objects.filter(is_public=True).select_related('author', 'category').prefetch_related('tags', 'ingredients', 'steps')
         
         # Search functionality
         search_query = self.request.GET.get('search')
@@ -47,25 +47,57 @@ class RecipeDetailView(DetailView):
     context_object_name = 'recipe'
     
     def get_queryset(self):
+        queryset = Recipe.objects.select_related('author', 'category').prefetch_related(
+            'ingredients__ingredient',
+            'ingredients__unit', 
+            'steps',
+            'tags',
+            'ratings__user'
+        )
+        
         if self.request.user.is_authenticated:
             # Show user's own recipes even if private
-            return Recipe.objects.filter(
+            return queryset.filter(
                 Q(is_public=True) | Q(author=self.request.user)
-            ).select_related('author', 'category')
-        return Recipe.objects.filter(is_public=True).select_related('author', 'category')
+            )
+        return queryset.filter(is_public=True)
+from django.forms import inlineformset_factory
+from .models import RecipeStep
+from .forms import RecipeStepForm
+
+RecipeStepFormSet = inlineformset_factory(
+    Recipe, RecipeStep,
+    form=RecipeStepForm,
+    fields=['step_number', 'instruction', 'time_required'],
+    extra=1,
+    can_delete=True
+)
 
 class RecipeCreateView(LoginRequiredMixin, CreateView):
     model = Recipe
     form_class = RecipeForm
     template_name = 'recipes/recipe_form.html'
-    
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['step_formset'] = RecipeStepFormSet(self.request.POST, self.request.FILES)
+        else:
+            context['step_formset'] = RecipeStepFormSet()
+        return context
+
     def form_valid(self, form):
+        context = self.get_context_data()
+        step_formset = context['step_formset']
         form.instance.author = self.request.user
+        self.object = form.save()
+        if step_formset.is_valid():
+            step_formset.instance = self.object
+            step_formset.save()
+        else:
+            return self.form_invalid(form)
         messages.success(self.request, 'Recipe created successfully!')
         return super().form_valid(form)
-    
-    def get_success_url(self):
-        return self.object.get_absolute_url()
 
 class RecipeUpdateView(LoginRequiredMixin, UpdateView):
     model = Recipe
@@ -93,14 +125,19 @@ class RecipeDeleteView(LoginRequiredMixin, DeleteView):
 
 @login_required
 def my_recipes(request):
-    """View user's own recipes"""
-    recipes = Recipe.objects.filter(author=request.user).order_by('-created_at')
+    """View user's own recipes with enhanced data"""
+    recipes = Recipe.objects.filter(author=request.user).select_related('category').prefetch_related(
+        'ingredients__ingredient',
+        'steps',
+        'tags'
+    ).order_by('-created_at')
     
     search_query = request.GET.get('search')
     if search_query:
         recipes = recipes.filter(
             Q(title__icontains=search_query) |
-            Q(description__icontains=search_query)
+            Q(description__icontains=search_query) |
+            Q(instructions__icontains=search_query)
         )
     
     context = {
