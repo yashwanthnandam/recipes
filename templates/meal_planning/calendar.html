@@ -11,14 +11,12 @@
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         overflow: hidden;
     }
-    
     .calendar-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         padding: 20px;
         text-align: center;
     }
-    
     .day-card {
         border: 1px solid #e9ecef;
         border-radius: 8px;
@@ -27,12 +25,10 @@
         min-height: 300px;
         transition: all 0.3s ease;
     }
-    
     .day-card.today {
         border-color: #007bff;
         box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
     }
-    
     .day-header {
         font-weight: 600;
         color: #495057;
@@ -40,11 +36,9 @@
         padding-bottom: 8px;
         border-bottom: 2px solid #e9ecef;
     }
-    
     .meal-section {
         margin-bottom: 12px;
     }
-    
     .meal-type {
         font-size: 0.9rem;
         font-weight: 600;
@@ -54,7 +48,6 @@
         align-items: center;
         gap: 5px;
     }
-    
     .meal-item {
         background: #f8f9fa;
         border-radius: 6px;
@@ -65,12 +58,10 @@
         cursor: pointer;
         transition: all 0.2s ease;
     }
-    
     .meal-item:hover {
         background: #e9ecef;
         transform: translateY(-1px);
     }
-    
     .meal-item .remove-btn {
         position: absolute;
         top: 2px;
@@ -84,11 +75,9 @@
         font-size: 12px;
         display: none;
     }
-    
     .meal-item:hover .remove-btn {
         display: block;
     }
-    
     .add-meal-btn {
         width: 100%;
         border: 2px dashed #dee2e6;
@@ -99,30 +88,25 @@
         font-size: 0.8rem;
         transition: all 0.2s ease;
     }
-    
     .add-meal-btn:hover {
         border-color: #007bff;
         color: #007bff;
         background: rgba(0, 123, 255, 0.05);
     }
-    
     .week-navigation {
         margin-bottom: 20px;
     }
-    
     .quick-actions {
         position: sticky;
         top: 20px;
         z-index: 100;
     }
-    
     .template-card {
         border-radius: 8px;
         margin-bottom: 10px;
         cursor: pointer;
         transition: all 0.2s ease;
     }
-    
     .template-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -143,9 +127,6 @@
                             <a href="?week={{ prev_week }}" class="btn btn-outline-light">
                                 <i class="bi bi-chevron-left"></i> Previous Week
                             </a>
-                            <button class="btn btn-light" onclick="downloadCalendar()">
-                                <i class="bi bi-download"></i> Export Week
-                            </button>
                         </div>
                         <div class="col-md-6 text-center">
                             <h3 class="mb-0">
@@ -158,25 +139,20 @@
                             </a>
                         </div>
                     </div>
-                    <!-- Export Week Button Only -->
-                    <div class="row mt-3">
-                        <div class="col-12 d-flex justify-content-end gap-2">
-                            <button class="btn btn-sm btn-light" onclick="downloadCalendar()">
-                                <i class="bi bi-download"></i> Export Week
-                            </button>
-                        </div>
-                    </div>
                 </div>
                 
                 <!-- Week Navigation -->
                 <div class="week-navigation p-3 bg-light">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-6 d-flex gap-2">
                             <div class="btn-group" role="group">
                                 <a href="?week=0" class="btn btn-outline-primary btn-sm">This Week</a>
                                 <a href="?week=1" class="btn btn-outline-primary btn-sm">Next Week</a>
                                 <a href="?week=-1" class="btn btn-outline-primary btn-sm">Last Week</a>
                             </div>
+                            <button class="btn btn-light btn-sm" onclick="downloadCalendar()">
+                                <i class="bi bi-download"></i> Export Week
+                            </button>
                         </div>
                         <div class="col-md-6 text-end">
                             <button class="btn btn-success btn-sm" onclick="showQuickAddModal()">
@@ -402,7 +378,6 @@
 </div>
 
 <script>
-// Calculate total meals
 document.addEventListener('DOMContentLoaded', function() {
     const totalMeals = document.querySelectorAll('.meal-item').length;
     document.getElementById('total-meals').textContent = totalMeals;
@@ -435,28 +410,21 @@ function downloadCalendar() {
         </div>
     `;
     
-    // Add modal to page if not exists
     if (!document.getElementById('exportModal')) {
         document.body.insertAdjacentHTML('beforeend', options);
     }
-    
-    // Show modal
     const modal = new bootstrap.Modal(document.getElementById('exportModal'));
     modal.show();
 }
 
 function downloadPDF() {
-    // Get current week parameter
     const urlParams = new URLSearchParams(window.location.search);
     const week = urlParams.get('week') || '0';
-    
-    // Open PDF export in new tab
     const pdfUrl = `/meal-planning/export/pdf/?week=${week}`;
     window.open(pdfUrl, '_blank');
 }
 
 function downloadText() {
-    // Original text export function
     let text = "Meal Plan: {{ week_start|date:'M d' }} - {{ week_end|date:'M d, Y' }}\n\n";
     {% for day in week_data %}
         text += "{{ day.day_name }} ({{ day.date|date:'Y-m-d' }}):\n";
@@ -482,15 +450,11 @@ function downloadText() {
     a.click();
 }
 
-// ... rest of your JS unchanged ...
 function showAddMealModal(date, mealType) {
     document.getElementById('meal-date').value = date;
     document.getElementById('meal-type').value = mealType;
-    
-    // Update modal title
     const modalTitle = document.querySelector('#addMealModal .modal-title');
     modalTitle.textContent = `Add ${mealType.charAt(0).toUpperCase() + mealType.slice(1)} for ${date}`;
-    
     const modal = new bootstrap.Modal(document.getElementById('addMealModal'));
     modal.show();
 }
@@ -498,7 +462,6 @@ function showAddMealModal(date, mealType) {
 function addMeal() {
     const form = document.getElementById('addMealForm');
     const formData = new FormData(form);
-    
     fetch("{% url 'meal_planning:plan_create' %}", {
         method: 'POST',
         body: formData,
@@ -554,7 +517,6 @@ function applyTemplate(templateId, templateName) {
         const formData = new FormData();
         formData.append('week_start', '{{ week_start|date:"Y-m-d" }}');
         formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-        
         fetch(`/meal-planning/templates/${templateId}/apply/`, {
             method: 'POST',
             body: formData,
