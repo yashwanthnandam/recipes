@@ -105,6 +105,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         
         return context
 
-def dashboard(request):
-    """Simple dashboard view function"""
-    return render(request, 'core/dashboard.html')
+
+
+# apps/core/views.py
+from django.http import HttpResponse
+
+def csrf_failure(request, reason=""):
+    return HttpResponse(f"CSRF Failed: {reason}", status=403)
