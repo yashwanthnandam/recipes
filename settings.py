@@ -12,7 +12,21 @@ sys.path.insert(0, str(BASE_DIR / 'apps'))
 SECRET_KEY = 'your-secret-key-change-this-in-production'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DJANGO_ENV = os.getenv('DJANGO_ENV', 'local')
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
+
+if DJANGO_ENV == 'production' or not DEBUG:
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    USE_X_FORWARDED_HOST = True
+    SECURE_SSL_REDIRECT = True
+else:
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+    SECURE_PROXY_SSL_HEADER = None
+    USE_X_FORWARDED_HOST = False
+    SECURE_SSL_REDIRECT = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -29,8 +43,6 @@ CSRF_TRUSTED_ORIGINS = [
 
 
 
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
 
 # Application definition
 DJANGO_APPS = [
@@ -59,17 +71,14 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-USE_X_FORWARDED_HOST = True
-SECURE_SSL_REDIRECT = True
-
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 ROOT_URLCONF = 'urls'
 
@@ -89,7 +98,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'recipes.wsgi.application'
+WSGI_APPLICATION = 'apps.recipes.wsgi.application'
 
 # Database
 DATABASES = {

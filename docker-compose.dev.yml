@@ -2,15 +2,17 @@ version: '3.8'
 
 services:
   web:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
     volumes:
-      # - .:/app
-      - media_volume:/app/media
+      - ./media:/app/media
+      # - media_volume:/app/media
     ports:
       - "8000:8000"
     environment:
-      - DEBUG=False
-      - DJANGO_ENV=production
+      - DEBUG=True
+      - DJANGO_ENV=local
 
     networks:
       - recipes_network
