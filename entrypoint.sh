@@ -1,11 +1,13 @@
 #!/bin/bash
+set -e
+
+# Start nginx
+service nginx start
 
 cd /app
 
-# Apply migrations
+# Apply migrations & collect static
 python manage.py migrate
-
-# Collect static files
 python manage.py collectstatic --noinput
 
 # Create superuser if not exists
@@ -16,7 +18,8 @@ if not User.objects.filter(username='admin').exists():
     User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
 EOF
 
-# Start Gunicorn with plain HTTP (handled by load balancer/proxy)
-exec gunicorn \
-  --bind 0.0.0.0:8000 \
-  apps.recipes.wsgi:application
+# Start Gunicorn in the background
+gunicorn --bind 127.0.0.1:8001 apps.recipes.wsgi:application &
+
+# Keep container running
+tail -f /var/log/nginx/access.log
