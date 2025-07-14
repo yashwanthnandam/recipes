@@ -16,22 +16,7 @@ services:
 
     networks:
       - recipes_network
-    x-tinkr:
-      cpu: 512
-      memory: 512
-      network:
-        public: true
-      ports:
-        web-8000:
-          port: 8000
-          protocol: http
-          public: true
-          healthcheck:
-            timeout: 10
-            interval: 30
-            path: /
-            retries: 3
-            success_code: 200-399
+   
 
 volumes:
   media_volume:
