@@ -5,7 +5,7 @@ __pycache__/
 *.pyd
 
 # Django database (usually do not commit, but OK for dev)
-db.sqlite3
+# db.sqlite3
 
 # Media files
 

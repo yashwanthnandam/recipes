@@ -14,8 +14,8 @@ class RecipeStepAnalyzer:
     """Cost-optimized GPT service for recipe step analysis with robust JSON handling"""
 
     def __init__(self):
-        self.model = "gpt-3.5-turbo"
-        self.max_tokens = 500  # Increased for better responses
+        self.model = "gpt-4o"
+        self.max_tokens = 800  # Increased for better responses
         self.temperature = 0.1
         self.enabled = bool(getattr(settings, 'OPENAI_API_KEY', os.getenv('OPENAI_API_KEY')))
         

@@ -224,8 +224,9 @@ class Command(BaseCommand):
         for i in range(1, 21):
             ingredient_key = f'strIngredient{i}'
             measure_key = f'strMeasure{i}'
-            ingredient_name = meal_data.get(ingredient_key, '').strip()
-            measure = meal_data.get(measure_key, '').strip()
+            # Use (value or '') to avoid NoneType errors
+            ingredient_name = (meal_data.get(ingredient_key) or '').strip()
+            measure = (meal_data.get(measure_key) or '').strip()
             if ingredient_name and ingredient_name.lower() not in ['', 'null']:
                 ingredients.append({
                     'name': ingredient_name,
@@ -387,11 +388,16 @@ class Command(BaseCommand):
                             time_required=step_data['time_minutes']
                         )
                         # No step images
+                # --- MIN CHANGE: Deduplicate RecipeIngredient for (recipe, ingredient) ---
+                used_ingredient_ids = set()
                 for ing_data in recipe_data['ingredients']:
                     ingredient, _ = Ingredient.objects.get_or_create(
                         name=ing_data['name'],
                         defaults={'description': f'{ing_data["name"]} ingredient'}
                     )
+                    if ingredient.id in used_ingredient_ids:
+                        continue  # Skip duplicate ingredient for this recipe
+                    used_ingredient_ids.add(ingredient.id)
                     quantity, unit_name = self.parse_measure(ing_data['measure'])
                     unit, _ = Unit.objects.get_or_create(
                         name=unit_name,
@@ -425,9 +431,9 @@ class Command(BaseCommand):
                 self.style.ERROR(f'Error creating recipe {meal_data.get("strMeal", "Unknown")}: {e}')
             )
             return None
-
+        
     def parse_instructions_into_steps_simple(self, instructions):
-        """Simple rule-based step parsing fallback"""
+        """Improved: Keep all steps, no trimming or step count limits"""
         if not instructions:
             return []
         import re
@@ -446,8 +452,8 @@ class Command(BaseCommand):
             parts = [p.strip() for p in instructions.split('\n\n') if p.strip()]
         if not parts:
             parts = [instructions]
-        for i, part in enumerate(parts[:10]):
-            if len(part) < 10:
+        for i, part in enumerate(parts):
+            if len(part.strip()) == 0:
                 continue
             time_estimate = 5
             part_lower = part.lower()
@@ -457,7 +463,7 @@ class Command(BaseCommand):
                 time_estimate = 3
             steps.append({
                 'number': i + 1,
-                'text': part[:500],
+                'text': part.strip(),
                 'time_minutes': time_estimate,
                 'type': 'prep'
             })
