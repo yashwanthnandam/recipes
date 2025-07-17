@@ -15,8 +15,8 @@ services:
     networks:
       - recipes_network
     x-tinkr:
-      cpu: 512
-      memory: 512
+      cpu: 128
+      memory: 128
       network:
         public: true
       ports:
